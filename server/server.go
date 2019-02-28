@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	uploadlog      string
+	uploadlog string
 	uploadtemplate = template.Must(template.ParseGlob("upload.html"))
 )
 
@@ -53,10 +53,10 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		createLogMessage("Upload successful")
 		//Executes uploas template again after upload is complete
-		err = uploadtemplate.Execute(w, nil)
-		if err != nil {
-			log.Print(err)
-		}
+		// err = uploadtemplate.Execute(w, nil)
+		// if err != nil {
+		// 	log.Print(err)
+		// }
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
