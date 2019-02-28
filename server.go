@@ -18,14 +18,16 @@ var (
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		updateDashboard("Select video and upload")
+		createLogMessage("Select video and upload")
 		w.WriteHeader(200)
+		//Executes upload file template
 		err := uploadtemplate.Execute(w, nil)
 		if err != nil {
 			log.Print(err)
 		}
 	case "POST":
-		updateDashboard("Upload started")
+		createLogMessage("Upload started")
+		//Starts readig file by chuncking
 		r.ParseMultipartForm(32 << 20)
 		file, handler, err := r.FormFile("myfiles")
 		defer file.Close()
@@ -33,22 +35,24 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			fmt.Println(err)
 			return
 		}
-		updateDashboard("Creating file")
-		dst, err := os.OpenFile("./"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+		createLogMessage("Creating file")
+		//Create empty file in /videos folder
+		dst, err := os.OpenFile("./videos/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 		defer dst.Close()
 		if err != nil {
 			fmt.Println(err)
-			updateDashboard("Error while creating file")
+			createLogMessage("Error while creating file")
 			return
 		}
-		updateDashboard("Writing to file")
+		createLogMessage("Writing to file")
+		//Copies a temporary file to empty file in /videos folder
 		if _, err := io.Copy(dst, file); err != nil {
 			fmt.Println(err)
-			updateDashboard("Error while writing to file")
+			createLogMessage("Error while writing to file")
 			return
-		} else {
-			updateDashboard("Upload successful")
 		}
+		createLogMessage("Upload successful")
+		//Executes uploas template again after upload is complete
 		err = uploadtemplate.Execute(w, nil)
 		if err != nil {
 			log.Print(err)
@@ -58,7 +62,8 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func updateDashboard(msg string) {
+//Creates log message
+func createLogMessage(msg string) {
 	curentTime := time.Now().Format("15:04:05")
 	uploadlog = fmt.Sprintf("<%v> %v", curentTime, msg)
 	print(uploadlog + "\n")
