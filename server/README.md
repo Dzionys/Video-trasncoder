@@ -1,2 +1,30 @@
 # Video-trasncoder
-video file transcoding system
+Video file transcoding system.
+
+### Requiremets
+  - ffmpeg
+  - golang (used version 1.11.5)
+  - python
+
+You need to compile ffmpeg with: NASM, Yasm, libx264, libx265 and libfdk-acc in order to be able to use ACC audio encoder.
+Full guide for all platforms: http://trac.ffmpeg.org/wiki/CompilationGuide
+
+Your browser must support HTML5 Sever-Sent-Events.
+
+### External golang libraries
+  - github.com/BurntSushi/toml
+  - github.com/Sirupsen/logrus
+
+```sh
+$ go get github.com/BurntSushi/toml
+$ go get github.com/Sirupsen/logrus
+```
+
+### Run
+```sh
+$ go run server.go
+```
+### Open:
+```
+localhost:8080/
+```

@@ -2,42 +2,29 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="styles.css">
     <title>Video Upload</title>
-   <style>
-   body {
-        font-family: Sans-serif;
-        padding-top: 40px;
-        padding-bottom: 40px;
-        background-color: #ffffff;
-   }
-   h1 {text-align: center; margin-bottom: 30px;}
-   .message {font-weight:bold}
-   fieldset {width:50%}
-   samp {
-       background: #000;
-       border: 3px groove #ccc;
-       color: green;
-       display: block;
-       padding: 5px;
-       width: 500px;
-   }
-   </style>
   </head>
   <body onload="onLoaded();">
-    
-    <div class="container">
-      <h1>Video Upload</h1>
-      <form class="form-signin" method="post" action="/upload" enctype="multipart/form-data">
-          <fieldset>
-            <input type="file" name="myfiles" id="myfiles" multiple="multiple">
-            <input type="submit" name="submit" value="Submit">
-        </fieldset>
+    <div class = "container">
+      <h1>Video Transcoder</h1>
+      <form action="/upload" method="post" enctype="multipart/form-data" class="uploadForm">
+        <input class="uploadForm__input" type="file" name="file" id="inputFile">
+        <label class="uploadForm__label" for="inputFile">
+            <i class="fa fa-upload uploadForm__icon"></i> Select a file
+        </label>
       </form>
+      <div id="main">
+          <p><samp id="console"></samp></p>
+      </div>
     </div>
-
-    <div id="main">
-      <p><samp id="console"></samp></p>
-    </div>
-    <script src="main.js"></script>
+    <div class="notification" id="alert"></div>
+    <noscript>JavaScript is necessary!</noscript>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="api.js"></script>
+    <script src="up.js"></script>
+    <script src="sse.js"></script>
   </body>
 </html>

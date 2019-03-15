@@ -1,0 +1,9 @@
+SD = "videos/"
+DD = "videos/transcoded/"
+DebugStart = "-ss 00:00:00"
+DebugEnd = "-t 00:00:30"
+TempJson = "transcode/temp.json"
+TempTxt = "transcode/temp.txt"
+VBW = 2500
+ABW = 128
+DataGen = "transcode/generate_data.py"
