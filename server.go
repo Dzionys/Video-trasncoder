@@ -83,15 +83,15 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(infojs)
 		wg.Wait()
 
-		for {
-			if crGot {
-				break
-			}
-		}
+		// for {
+		// 	if crGot {
+		// 		break
+		// 	}
+		// }
 		lp.WLog("Information received")
 
 		// Start to transcode file.
-		//go transcoder.ProcessVodFile(handler.Filename, true)
+		go transcoder.ProcessVodFile(handler.Filename, true)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

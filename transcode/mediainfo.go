@@ -2,6 +2,7 @@ package transcoder
 
 type videotrack struct {
 	index      int
+	duration   string
 	width      int
 	height     int
 	frameRate  float64

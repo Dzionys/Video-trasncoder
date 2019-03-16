@@ -13,11 +13,9 @@ Your browser must support HTML5 Sever-Sent-Events.
 
 ### External golang libraries
   - github.com/BurntSushi/toml
-  - github.com/Sirupsen/logrus
 
 ```sh
 $ go get github.com/BurntSushi/toml
-$ go get github.com/Sirupsen/logrus
 ```
 
 ### Run

@@ -10,16 +10,19 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+    "strconv"
 
 	"../lp"
+	"../sse"
 	"github.com/BurntSushi/toml"
-	logrus "github.com/Sirupsen/logrus"
 )
 
 var (
 	wg    sync.WaitGroup
 	DEBUG = false
 	CONF  Config
+	allRes = ""
+	lastPer = -1
 )
 
 func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
@@ -53,13 +56,13 @@ func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
 	}
 
 	// Audio cmd
-	acode = ""
-	for i := 0; i < d.audiotracks; i++ {
-		if !(d.videotrack[0].frameRate < 25) {
-			mapping += fmt.Sprintf(" -map 0:%v", d.audiotrack[i].index)
-		}
-		acode += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, CONF.ABW, d.audiotrack[i].language)
-	}
+	// acode = ""
+	// for i := 0; i < d.audiotracks; i++ {
+	// 	if !(d.videotrack[0].frameRate < 25) {
+	// 		mapping += fmt.Sprintf(" -map 0:%v", d.audiotrack[i].index)
+	// 	}
+	// 	acode += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, CONF.ABW, d.audiotrack[i].language)
+	// }
 
 	// Subtitles cmd
 	scode = ""
@@ -72,7 +75,7 @@ func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
 	// Set debug duration if debug is selected
 	ss = ""
 	if DEBUG {
-		ss = CONF.DebugStart + " " + CONF.DebugEnd
+		ss = "-ss " + CONF.DebugStart + " -t " + CONF.DebugEnd
 	}
 
 	// Add all parts in one command line
@@ -82,27 +85,79 @@ func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
 	return cmd
 }
 
-func runCmdCommand(cmd string, wg *sync.WaitGroup) error {
+func durToSec(dur string) (sec int) {
+    durAry := strings.Split(dur, ":")
+    if len(durAry) != 3 {
+        return
+    }
+    hr, _ := strconv.Atoi(durAry[0])
+    sec = hr * (60 * 60)
+    min, _ := strconv.Atoi(durAry[1])
+    sec += min * (60)
+    second, _ := strconv.Atoi(durAry[2])
+    sec += second
+    return
+}
+func getRatio(res string, duration int) {
+    i := strings.Index(res, "time=")
+    if i >= 0 {
+        time := res[i+5:]
+        if len(time) > 8 {
+            time = time[0:8]
+            sec := durToSec(time)
+            per := (sec * 100) / duration
+            if lastPer != per {
+				lastPer = per
+				sse.UpdateLogMessage(fmt.Sprintf("Percentage done: %v proc.", per))
+            }
+
+            allRes = ""
+        }
+    }
+}
+
+func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 	defer wg.Done()
 
 	// Splits cmd command
-	parts := strings.Fields(cmd)
+	parts := strings.Fields(cmdl)
 	head := parts[0]
 	parts = parts[1:]
 
-	cmdl := exec.Command(head, parts...)
-	cmdl.Stdout = logrus.StandardLogger().Out
-	cmdl.Stderr = logrus.StandardLogger().Out
-	if err := cmdl.Run(); err != nil {
-		return err
+	cmd := exec.Command(head, parts...)
+
+	stdout, _ := cmd.StderrPipe()
+    cmd.Start()
+	oneByte := make([]byte, 8)
+	
+	if dur == "" {
+		lp.WLog("Progress bar unavailable")
+	} else {
+		duration := durToSec(dur)
+		for {
+			_, err := stdout.Read(oneByte)
+			if err != nil {
+				log.Println(err)
+				break
+			}
+			allRes += string(oneByte)
+			getRatio(allRes, duration)
+		}
 	}
+
+	// if err := cmd.Run(); err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
 
 func ProcessVodFile(source string, debug bool) {
 	lp.WLog("Starting VOD Processor..")
-	var err error
+	var (
+		err error
+		dur string
+	)
 
 	// Load config file
 	CONF, err = upConf()
@@ -203,21 +258,26 @@ func ProcessVodFile(source string, debug bool) {
 	lp.WLog(frmt)
 
 	// Generate command line
-	// cmd := []byte(generateCmdLine(data, sfpath, destinationfile, fullsfname))
+	cmd := []byte(generateCmdLine(data, sfpath, destinationfile, fullsfname))
 
-	// // Run generated command line
-	// lp.WLog("Starting to transcode")
-	// wg.Add(1)
-	// err = runCmdCommand(string(cmd), &wg)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	lp.WLog("Error: could not start trancoding")
-	// 	return
-	// }
-	// wg.Wait()
+	// Run generated command line
+	lp.WLog("Starting to transcode")
+	wg.Add(1)
+	if debug {
+		dur = CONF.DebugEnd
+	} else {
+		dur = data.videotrack[0].duration
+	}
+	err = runCmdCommand(string(cmd), dur, &wg)
+	if err != nil {
+		log.Println(err)
+		lp.WLog("Error: could not start trancoding")
+		return
+	}
+	wg.Wait()
 
-	// msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(destinationfile))
-	// lp.WLog(msg)
+	msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(destinationfile))
+	lp.WLog(msg)
 }
 
 // Load config file

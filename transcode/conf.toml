@@ -1,7 +1,7 @@
 SD = "videos/"
 DD = "videos/transcoded/"
-DebugStart = "-ss 00:00:00"
-DebugEnd = "-t 00:00:30"
+DebugStart = "00:00:00"
+DebugEnd = "00:00:30"
 TempJson = "transcode/temp.json"
 TempTxt = "transcode/temp.txt"
 VBW = 2500
