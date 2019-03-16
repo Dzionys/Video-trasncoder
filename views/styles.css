@@ -28,19 +28,47 @@ div#main {
 #titlebar {
     background-color: #1a1b25;
     width: 100%;
-    padding: 0.4rem;
+    padding: 0.4rem 0.5rem;
     border-radius: 2px 2px 0px 0px;
-    box-sizing: border-box; 
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+}
+
+#titlebar .buttons {
+    display: inline-block;
+    align-self: right;
+}
+
+#titlebar .buttons span {
+    margin-left: 6px;
+    display: inline-block;
+    height: 0.7rem;
+    width: 0.7rem;
+    border-radius: 50%;
+}
+
+#titlebar .buttons span.red {
+    background-color: #ff5555;
+}
+
+#titlebar .buttons span.green {
+    background-color: #50fa7b;
+}
+
+#titlebar .buttons span.yellow {
+    background-color: #f1fa8c;
 }
 
 #console {
     background-color: #242534;
     display: block;
     width: 100%;
-    min-height: 15rem;
+    height: 15rem;
     padding: 0.4rem;
     border-radius: 0px 0px 2px 2px;
-    box-sizing: border-box; 
+    box-sizing: border-box;
+    overflow-y: scroll;
 }
 
 #console span.user {
