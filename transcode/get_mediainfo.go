@@ -36,6 +36,7 @@ func GetMediaInfoJson(source string, wg *sync.WaitGroup) ([]byte, error) {
 	if !json.Valid([]byte(out)) {
 		return out, errors.New("data is not valid json file")
 	}
+	
 	return out, nil
 }
 

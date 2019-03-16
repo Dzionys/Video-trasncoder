@@ -6,10 +6,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
+	"fmt"
 
 	"./lp"
 	"./sse"
-	// transcoder "./transcode"
+	transcoder "./transcode"
 )
 
 var uploadtemplate = template.Must(template.ParseGlob("upload.html"))
@@ -27,8 +29,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case "POST":
 
-		
-
 		//Starts readig file by chuncking
 		r.ParseMultipartForm(32 << 20)
 		file, handler, err := r.FormFile("file")
@@ -44,7 +44,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		//Create empty file in /videos folder
 		lp.WLog("Creating file")
-		dst, err := os.OpenFile("./video/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+		dst, err := os.OpenFile("./videos/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 		defer dst.Close()
 		if err != nil {
 			log.Println(err)
@@ -62,8 +62,18 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		lp.WLog("Upload successful")
 
+		// Sending json response with video info
+		var wg sync.WaitGroup
+		wg.Add(1)
+		infojs, err := transcoder.GetMediaInfoJson("./videos/"+handler.Filename, &wg)
+		if err != nil {
+			lp.WLog(fmt.Sprintf("%s", err))
+		}
+		w.Write(infojs)
+		wg.Wait()
+
 		// Start to transcode file.
-		// go transcoder.ProcessVodFile(handler.Filename, true)
+		//go transcoder.ProcessVodFile(handler.Filename, true)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}

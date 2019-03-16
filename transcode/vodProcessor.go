@@ -203,21 +203,21 @@ func ProcessVodFile(source string, debug bool) {
 	lp.WLog(frmt)
 
 	// Generate command line
-	cmd := []byte(generateCmdLine(data, sfpath, destinationfile, fullsfname))
+	// cmd := []byte(generateCmdLine(data, sfpath, destinationfile, fullsfname))
 
-	// Run generated command line
-	lp.WLog("Starting to transcode")
-	wg.Add(1)
-	err = runCmdCommand(string(cmd), &wg)
-	if err != nil {
-		log.Println(err)
-		lp.WLog("Error: could not start trancoding")
-		return
-	}
-	wg.Wait()
+	// // Run generated command line
+	// lp.WLog("Starting to transcode")
+	// wg.Add(1)
+	// err = runCmdCommand(string(cmd), &wg)
+	// if err != nil {
+	// 	log.Println(err)
+	// 	lp.WLog("Error: could not start trancoding")
+	// 	return
+	// }
+	// wg.Wait()
 
-	msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(destinationfile))
-	lp.WLog(msg)
+	// msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(destinationfile))
+	// lp.WLog(msg)
 }
 
 // Load config file
