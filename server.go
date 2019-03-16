@@ -41,9 +41,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		
 		sse.UpdateFakeTerminalMessage(handler.Filename)
 
-		for i:=0; i<10; i++ {
-			lp.WLog("Upload started")
-		}
+		//lp.WLog("Upload started")
 
 		//Create empty file in /videos folder
 		lp.WLog("Creating file")
