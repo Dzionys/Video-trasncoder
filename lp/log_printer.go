@@ -8,5 +8,5 @@ import (
 
 func WLog(msg string) {
 	fmt.Println(msg)
-	go sse.UpdateLogMessage(msg)
+	sse.UpdateLogMessage(msg)
 }

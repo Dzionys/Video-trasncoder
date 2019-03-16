@@ -10,17 +10,18 @@
   <body onload="onLoaded();">
     <div class = "container">
       <h1>Video Transcoder</h1>
-      <form action="/upload" method="post" enctype="multipart/form-data" class="uploadForm">
-        <input class="uploadForm__input" type="file" name="file" id="inputFile">
-        <label class="uploadForm__label" for="inputFile">
-            <i class="fa fa-upload uploadForm__icon"></i> Select a file
+      <form action="/upload" method="post" enctype="multipart/form-data" class="upload-form">
+        <input class="upload-form-input" type="file" name="file" id="input-file">
+        <label class="upload-form-label" for="input-file">
+            <i class="fa fa-upload upload-form-icon"></i> Select a file
         </label>
       </form>
       <div id="main">
-          <p><samp id="console"></samp></p>
+        <div id="titlebar">Log</div>
+        <code id="console"></code>
       </div>
     </div>
-    <div class="notification" id="alert"></div>
+    <!-- <div class="notification" id="alert"></div> -->
     <noscript>JavaScript is necessary!</noscript>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="api.js"></script>

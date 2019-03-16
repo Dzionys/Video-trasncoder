@@ -1,0 +1,114 @@
+@import url('https://fonts.googleapis.com/css?family=Monoton');
+
+h1 {
+    text-align: center;
+    font-size: 3rem;
+    margin-bottom: 30px;
+    color: rgb(194, 194, 194);
+    font-weight: normal;
+    font-family: 'Monoton', cursive;
+}
+
+button {
+    background-color: #172C64;
+    width: 150px;
+    height: 50px;
+    color: #000;
+    font-size: 120%;
+}
+
+div#main {
+    color: white;
+    width: 40rem;
+    box-shadow: #242534 0px 0px 6px;
+    border-radius: 2px;
+    margin-top: 1.4rem;
+}
+
+#titlebar {
+    background-color: #1a1b25;
+    width: 100%;
+    padding: 0.4rem;
+    border-radius: 2px 2px 0px 0px;
+    box-sizing: border-box; 
+}
+
+#console {
+    background-color: #242534;
+    display: block;
+    width: 100%;
+    min-height: 15rem;
+    padding: 0.4rem;
+    border-radius: 0px 0px 2px 2px;
+    box-sizing: border-box; 
+}
+
+#console span.user {
+    color: #8AE234;
+    font-weight: bold;
+}
+
+#console span.home {
+    color: #729FCF;
+    font-weight: bold;
+}
+
+code span.error {
+    color: #EF2929;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh;    
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    background-color: #4f5d75;
+}
+
+body,
+.upload-form,
+.upload-form-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-form {
+    box-sizing: border-box; 
+    width: 40rem;
+    height: 150px;
+    flex-direction: column;    
+    font-family: inherit;
+    background-color: #7c99b4;
+    border-radius: 2px;
+    padding: 0.4rem;
+    box-shadow: #24253444 0px 0px 6px;
+}
+
+.upload-form-input {
+    display: none;
+}
+
+.upload-form-label {
+    padding: .5em 2em;
+    color: #172C64;
+    transition: transform .4s;
+    flex-direction: column;
+    background-color: #8eb8e5;
+    border-radius: 2px;
+    box-shadow: #24253444 0px 0px 6px;
+    transition: 500ms;
+}
+
+.upload-form-label:hover {
+    cursor: pointer;
+    transform: scale(1.01);
+    color: #8eb8e5;
+    background-color: #172C64;
+
+}
+
+.upload-form-icon {
+    font-size: 1.8em;
+}

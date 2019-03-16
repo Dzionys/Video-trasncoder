@@ -84,9 +84,14 @@ func (b *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// Flush data as soon as it has been updated
 		f.Flush()
+		println(msg)
 	}
 
 	log.Println("Finished HTTP request at ", r.URL.Path)
+}
+
+func UpdateFakeTerminalMessage(msg string) {
+	B.Messages <- msg
 }
 
 func UpdateLogMessage(msg string) {

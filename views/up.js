@@ -1,6 +1,6 @@
 (function (d, axios) {
     "use strict";
-    var inputFile = d.querySelector("#inputFile");
+    var inputFile = d.querySelector("#input-file");
     var divNotification = d.querySelector("#alert");
 
     inputFile.addEventListener("change", addFile);
