@@ -9,7 +9,7 @@ import (
 
 	"./lp"
 	"./sse"
-	// transcoder "./transcode"
+	transcoder "./transcode"
 )
 
 var uploadtemplate = template.Must(template.ParseGlob("upload.html"))
@@ -40,11 +40,14 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		
 		sse.UpdateFakeTerminalMessage(handler.Filename)
-		// lp.WLog("Upload started")
+
+		for i:=0; i<10; i++ {
+			lp.WLog("Upload started")
+		}
 
 		//Create empty file in /videos folder
 		lp.WLog("Creating file")
-		dst, err := os.OpenFile("./video/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+		dst, err := os.OpenFile("./videos/"+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 		defer dst.Close()
 		if err != nil {
 			log.Println(err)
@@ -63,7 +66,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		lp.WLog("Upload successful")
 
 		// Start to transcode file.
-		// go transcoder.ProcessVodFile(handler.Filename, true)
+		go transcoder.ProcessVodFile(handler.Filename, true)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
