@@ -6,22 +6,20 @@ function onLoaded(){
 
     source.onmessage = function (event){
         if (logg === "") {
-            logg = '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br/>';
+            logg = '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br>';
+            document.getElementById("filename").innerText = event.data
         } else if (event.data.indexOf("Error") > -1) {
-            logg += '<span class="error">' + event.data + '</span><br/>';
-        } else if (event.data.indexOf("Percentage") > -1) {
-            document.getElementById("console").innerHTML = logg;
-            document.getElementById("console").innerHTML = event.data;
+            logg += '<span class="error">' + event.data + '</span><br>';
+        } else if (/^[\s\S]*<br>.*?Progress:.*?<br>$/.test(logg)) {
+            logg = logg.replace(/^([\s\S]*<br>)(.*?Progress:.*?)(<br>)$/, `$1${event.data}$3`)
         } else {
             currentmsg = event.data;
-            logg += currentmsg + "<br/>";
+            logg += currentmsg + "<br>";
         }
 
-        if (event.data.indexOf("Percentage") == -1) {
-            console.log("OnMessage called:");
-            console.dir(event);
-            console.log(logg);
-            document.getElementById("console").innerHTML = logg;
-        }
+        // console.log("OnMessage called:");
+        // console.dir(event);
+        // console.log(logg);
+        document.getElementById("console").innerHTML = logg;
     }
 }
