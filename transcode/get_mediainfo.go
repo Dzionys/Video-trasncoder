@@ -36,7 +36,7 @@ func GetMediaInfoJson(source string, wg *sync.WaitGroup) ([]byte, error) {
 	if !json.Valid([]byte(out)) {
 		return out, errors.New("data is not valid json file")
 	}
-	
+
 	return out, nil
 }
 
@@ -80,9 +80,12 @@ func GetMediaInfoTxt(source string) (string, error) {
 func generateDataFile(wg *sync.WaitGroup, gpath string) error {
 	defer wg.Done()
 
-	out, err := exec.Command("python", gpath).Output()
+	out, err := exec.Command("python3", gpath).Output()
 	if err != nil {
-		return err
+		out, err = exec.Command("python", gpath).Output()
+		if err != nil {
+			return err
+		}
 	}
 
 	if string(out) == "False\n" {
