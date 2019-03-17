@@ -37,6 +37,13 @@ def parseData():
                 v[vc] = {}
                 v[vc]['index'] = int(s['index'])
                 v[vc]['codec_name'] = s['codec_name']
+                if 'tags' in s:
+                    if 'DURATION' in s['tags']:
+                        v[vc]['duration'] = s['tags']['DURATION']
+                    else:
+                        v[vc]['duration'] = ""
+                else:
+                    v[vc]['duration'] = ""
                 if 'width' in s:
                     v[vc]['width'] = int(s['width'])
                 else:
@@ -116,6 +123,8 @@ def writeToFile():
     for z in v:
         file.write("videotrack {0}\n".format(z))
         file.write("index {0}\n".format(v[z]["index"]))
+        if 'duration' in v[z]:
+            file.write("duration {0}\n".format(v[z]["duration"]))
         if 'width' in v[z]:
             file.write("width {0}\n".format(v[z]["width"]))
         if 'height' in v[z]:

@@ -39,6 +39,9 @@ func ParseFile(f string) (Vidinfo, error) {
 			vi.videotrack[i].index, _ = strconv.Atoi(ln[1])
 			scanner.Scan()
 			ln = strings.Split(scanner.Text(), " ")
+			vi.videotrack[i].duration = ln[1]
+			scanner.Scan()
+			ln = strings.Split(scanner.Text(), " ")
 			vi.videotrack[i].width, _ = strconv.Atoi(ln[1])
 			scanner.Scan()
 			ln = strings.Split(scanner.Text(), " ")
