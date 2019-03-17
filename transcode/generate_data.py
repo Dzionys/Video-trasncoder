@@ -18,7 +18,7 @@ ac = 0
 sc = 0
 
 jsonfile = 'transcode/temp.json'
-txtfile = 'transcode/temp.txt'
+jsondata = 'transcode/data.json'
 
 with open(jsonfile) as f:
     data = json.load(f)
@@ -41,9 +41,9 @@ def parseData():
                     if 'DURATION' in s['tags']:
                         v[vc]['duration'] = s['tags']['DURATION']
                     else:
-                        v[vc]['duration'] = ""
+                        v[vc]['duration'] = ''
                 else:
-                    v[vc]['duration'] = ""
+                    v[vc]['duration'] = ''
                 if 'width' in s:
                     v[vc]['width'] = int(s['width'])
                 else:
@@ -63,7 +63,7 @@ def parseData():
                 if 'field_order' in s:
                     v[vc]['field_order'] = s['field_order']
                 else:
-                    v[vc]['field_order'] = ""
+                    v[vc]['field_order'] = ''
                 vc = vc+1
             if s['codec_type'] == 'audio':
                 a[ac] = {}
@@ -78,7 +78,7 @@ def parseData():
                 if 'codec_name' in s:
                     a[ac]['codec_name'] = s['codec_name']
                 else:
-                    a[ac]['codec_name'] = ""
+                    a[ac]['codec_name'] = ''
                 if 'channels' in s:
                     a[ac]['channels'] = int(s['channels'])
                 else:
@@ -114,51 +114,47 @@ def parseData():
         return
 
 def writeToFile():
-    file = open(txtfile, "w")
-
-    file.write("videotracks {0}\n".format(vc))
-    file.write("audiotracks {0}\n".format(ac))
-    file.write("subtitles {0}\n".format(sc))
-
-    for z in v:
-        file.write("videotrack {0}\n".format(z))
-        file.write("index {0}\n".format(v[z]["index"]))
-        if 'duration' in v[z]:
-            file.write("duration {0}\n".format(v[z]["duration"]))
-        if 'width' in v[z]:
-            file.write("width {0}\n".format(v[z]["width"]))
-        if 'height' in v[z]:
-            file.write("height {0}\n".format(v[z]["height"]))
-        if 'frame_rate' in v[z]:
-            file.write("frame_rate {0}\n".format(v[z]["frame_rate"]))
-        if 'codec_name' in v[z]:
-            file.write("codec_name {0}\n".format(v[z]["codec_name"]))
-        if 'field_order' in v[z]:
-            file.write("field_order {0}\n".format(v[z]["field_order"]))
-
-    for x in a:
-        file.write("audiotrack {0}\n".format(x))
-        file.write("index {0}\n".format(a[x]["index"]))
-        if 'channels' in a[x]:
-            file.write("channels {0}\n".format(a[x]["channels"]))
-        if 'sample_rate' in a[x]:
-            file.write("sample_rate {0}\n".format(a[x]["sample_rate"]))
-        if 'language' in a[x]:
-            file.write("language {0}\n".format(a[x]["language"]))
-        if 'bit_rate' in a[x]:
-            file.write("bit_rate {0}\n".format(a[x]["bit_rate"]))
-        if 'codec_name' in a[x]:
-            file.write("codec_name {0}\n".format(a[x]["codec_name"]))
     
-    for c in u:
-        file.write("subtitle {0}\n".format(c))
-        file.write("index {0}\n".format(u[c]["index"]))
-        if 'lang' in u[c]:
-            file.write("language {0}\n".format(u[c]["lang"]))
+    data = {
+        'videotracks': vc,
+        'audiotracks': ac,
+        'subtitles': sc,
+        'videotrack': [None] * vc,
+        'audiotrack': [None] * ac,
+        'subtitle': [None] * sc
+    }
 
-    file.close()
+    for i, j in enumerate(v):
 
-            
+        data['videotrack'][i] = {
+            'index': v[j]['index'],
+            'duration': v[j]['duration'],
+            'width': v[j]['width'],
+            'height': v[j]['height'],
+            'frameRate': v[j]['frame_rate'],
+            'codecName': v[j]['codec_name'],
+            'fieldOrder': v[j]['field_order']
+        }
+
+    for i, j in enumerate(a):
+        data['audiotrack'][i] = {
+            'index': a[j]['index'],
+            'channels': a[j]['channels'],
+            'sampleRate': a[j]['sample_rate'],
+            'language': a[j]['language'],
+            'bitRate': a[j]['bit_rate'],
+            'codecName': a[j]['codec_name']
+        }
+
+    for i, j in enumerate(u):
+        data['subtitle'][i] = {
+            'index': u[j]['index'],
+            'subtitle': u[j]['lang']
+        }
+
+    with open(jsondata, 'w') as outfile:  
+        json.dump(data, outfile)
+           
 
 def main():
     parseData()
