@@ -35,6 +35,6 @@
         localStorage.setItem('video', response.data)
 
         resolution.innerText = `${response.data['videotrack'][0]['width']}x${response.data['videotrack'][0]['height']}`
-        codex.innerText = reponse.data['videotrack'][0]['codecName']
+        codec.innerText = response.data['videotrack'][0]['codecName']
     }
 })(document, axios)
