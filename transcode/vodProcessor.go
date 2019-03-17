@@ -1,9 +1,7 @@
 package transcoder
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -38,18 +36,18 @@ func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
 	)
 
 	// Video cmd
-	if d.videotrack[0].frameRate < 25 {
+	if d.Videotrack[0].FrameRate < 25 {
 		baseln := "-r 25 -filter_complex [0:v]setpts=%v/25*PTS[v];[0:a]atempo=25/%v[a] -map [v] -map [a]"
-		frate = fmt.Sprintf(baseln, d.videotrack[0].frameRate, d.videotrack[0].frameRate)
+		frate = fmt.Sprintf(baseln, d.Videotrack[0].FrameRate, d.Videotrack[0].FrameRate)
 	} else {
 		frate = ""
-		mapping = fmt.Sprintf("-map 0:%v", d.videotrack[0].index)
+		mapping = fmt.Sprintf("-map 0:%v", d.Videotrack[0].Index)
 	}
-	if d.videotrack[0].width > 1280 || d.videotrack[0].codecName != "h265" {
+	if d.Videotrack[0].Width > 1280 || d.Videotrack[0].CodecName != "h265" {
 		vcode = "-c:v:0 libx265 -x265-params \"preset=slower:me=hex:no-rect=1:no-amp=1:rd=4:aq-mode=2:"
 		vcode += "aq-strength=0.5:psy-rd=1.0:psy-rdoq=0.2:bframes=3:min-keyint=1\" "
 		vcode += fmt.Sprintf("-b:v:0 %vk -metadata:s:v:0 name=\"%v\"", CONF.VBW, sfname)
-		if d.videotrack[0].width > 1280 {
+		if d.Videotrack[0].Width > 1280 {
 			vcode += " -filter:v:0 \"scale=iw*sar:ih,pad=iw:iw/16*9:0:(oh-ih)/2\" -aspect 16:9"
 		}
 	} else {
@@ -58,18 +56,18 @@ func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
 
 	// Audio cmd
 	// acode = ""
-	// for i := 0; i < d.audiotracks; i++ {
+	// for i := 0; i < d.Sudiotracks; i++ {
 	// 	if !(d.videotrack[0].frameRate < 25) {
-	// 		mapping += fmt.Sprintf(" -map 0:%v", d.audiotrack[i].index)
+	// 		mapping += fmt.Sprintf(" -map 0:%v", d.Audiotrack[i].Index)
 	// 	}
-	// 	acode += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, CONF.ABW, d.audiotrack[i].language)
+	// 	acode += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, CONF.ABW, d.Audiotrack[i].Language)
 	// }
 
 	// Subtitles cmd
 	scode = ""
-	if d.subtitles > 0 {
-		for i := 0; i < d.subtitles; i++ {
-			scode += fmt.Sprintf(" -c:s:%v copy -metadata:s:s:%v language=%v", d.subtitle[i].index, d.subtitle[i].index, d.subtitle[i].language)
+	if d.Subtitles > 0 {
+		for i := 0; i < d.Subtitles; i++ {
+			scode += fmt.Sprintf(" -c:s:%v copy -metadata:s:s:%v language=%v", d.Subtitle[i].Index, d.Subtitle[i].Index, d.Subtitle[i].Language)
 		}
 	}
 
@@ -220,47 +218,15 @@ func ProcessVodFile(source string, debug bool) {
 
 	lp.WLog(fmt.Sprintf("Starting to process %s", source))
 
-	// Geting data about video
-	wg.Add(1)
-	infob, err := GetMediaInfoJson(sfpath, &wg)
+	// Get video info
+	data, err := GetVidInfo(sfpath, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
 	if err != nil {
 		log.Println(err)
-		lp.WLog(fmt.Sprintf("Error: could not get json data from file - %v", fullsfname))
-		return
-	}
-	wg.Wait()
-
-	// Writing data to temporary json file
-	var raw map[string]interface{}
-	json.Unmarshal(infob, &raw)
-	info, _ := json.Marshal(raw)
-	err = ioutil.WriteFile(CONF.TempJson, info, 0666)
-	if err != nil {
-		fmt.Println(err)
-		lp.WLog("Error: could not create json file")
-		return
-	}
-
-	// Run python file to get nesessary data from json file
-	gpath, err := filepath.Abs(CONF.DataGen)
-	wg.Add(1)
-	err = generateDataFile(&wg, gpath)
-	wg.Wait()
-	if err != nil {
-		log.Println(err)
-		lp.WLog("Error: failed to generate video data")
-		return
-	}
-
-	// Write data to Vidinfo struct
-	data, err := ParseFile(CONF.TempTxt)
-	if err != nil {
-		lp.WLog("Error: failed parsing data file")
 		return
 	}
 
 	msg := "%v video track(s), %v audio track(s) and %v subtitle(s) found"
-	frmt := fmt.Sprintf(msg, data.videotracks, data.audiotracks, data.subtitles)
+	frmt := fmt.Sprintf(msg, data.Videotracks, data.Audiotracks, data.Subtitles)
 	lp.WLog(frmt)
 
 	// Generate command line
@@ -272,7 +238,7 @@ func ProcessVodFile(source string, debug bool) {
 	if debug {
 		dur = CONF.DebugEnd
 	} else {
-		dur = data.videotrack[0].duration
+		dur = data.Videotrack[0].Duration
 	}
 	err = runCmdCommand(string(cmd), dur, &wg)
 	if err != nil {

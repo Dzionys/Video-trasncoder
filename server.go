@@ -1,25 +1,27 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"sync"
-	"fmt"
-	"encoding/json"
 
 	"./lp"
 	"./sse"
 	transcoder "./transcode"
+	"github.com/BurntSushi/toml"
 )
 
 var (
 	uploadtemplate = template.Must(template.ParseGlob("upload.html"))
-	vf transcoder.Video
-	wg sync.WaitGroup
-	crGot = false
+	vf             transcoder.Video
+	wg             sync.WaitGroup
+	crGot          = false
+	CONF           transcoder.Config
 )
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -44,13 +46,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			lp.WLog("Error: failed to upload file")
 			return
 		}
-		
+
 		sse.UpdateFakeTerminalMessage(handler.Filename)
 
 		//lp.WLog("Upload started")
 
 		// Checks if uploaded file with the same name already exists
-		if _, err := os.Stat("./videos/"+handler.Filename); err == nil {
+		if _, err := os.Stat("./videos/" + handler.Filename); err == nil {
 			lp.WLog(fmt.Sprintf("Error: file \"%v\" already exists", handler.Filename))
 			return
 		}
@@ -74,14 +76,22 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		lp.WLog("Upload successful")
 
-		// Sending json response with video info
-		wg.Add(1)
-		infojs, err := transcoder.GetMediaInfoJson("./videos/"+handler.Filename, &wg)
+		// Load config file
+		CONF, err := upConf()
 		if err != nil {
-			lp.WLog(fmt.Sprintf("%s", err))
+			log.Println(err)
+			lp.WLog("Error: failed to load config file")
+			return
 		}
-		w.Write(infojs)
-		wg.Wait()
+
+		// Sending json response with video info
+		data, err := transcoder.GetVidInfo("./videos/"+handler.Filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		info, _ := json.Marshal(data)
+		w.Write(info)
 
 		// for {
 		// 	if crGot {
@@ -97,6 +107,15 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func upConf() (transcoder.Config, error) {
+	var conf transcoder.Config
+	if _, err := toml.DecodeFile("transcode/conf.toml", &conf); err != nil {
+		log.Println("error geting conf.toml: ", err)
+		return conf, err
+	}
+	return conf, nil
+}
+
 func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		return
@@ -110,7 +129,7 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	// Decode json file
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&vf)
-    if err != nil {
+	if err != nil {
 		log.Println(err)
 		return
 	}

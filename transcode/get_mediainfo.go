@@ -5,11 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
+	"log"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
+
+	"../lp"
 )
 
 func GetMediaInfoJson(source string, wg *sync.WaitGroup) ([]byte, error) {
@@ -40,43 +42,6 @@ func GetMediaInfoJson(source string, wg *sync.WaitGroup) ([]byte, error) {
 	return out, nil
 }
 
-func GetMediaInfoTxt(source string) (string, error) {
-	var (
-		err error
-		wg  sync.WaitGroup
-	)
-	wg.Add(1)
-	infob, err := GetMediaInfoJson(source, &wg)
-	if err != nil {
-		return "", err
-	}
-	wg.Wait()
-
-	var raw map[string]interface{}
-	json.Unmarshal(infob, &raw)
-	info, _ := json.Marshal(raw)
-	err = ioutil.WriteFile("transcode/temp.json", info, 0666)
-	if err != nil {
-		return "", err
-	}
-
-	gpath, err := filepath.Abs("transcode/generate_data.py")
-	wg.Add(1)
-	err = generateDataFile(&wg, gpath)
-	wg.Wait()
-	if err != nil {
-		return "", err
-	}
-
-	file, err := ioutil.ReadFile("transcode/temp.txt")
-	defer os.Remove("transcode/temp.txt")
-	if err != nil {
-		return "", err
-	}
-
-	return string(file), nil
-}
-
 func generateDataFile(wg *sync.WaitGroup, gpath string) error {
 	defer wg.Done()
 
@@ -95,4 +60,56 @@ func generateDataFile(wg *sync.WaitGroup, gpath string) error {
 	}
 
 	return nil
+}
+
+func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string) (Vidinfo, error) {
+	var (
+		wg sync.WaitGroup
+		vi Vidinfo
+	)
+
+	// Geting data about video
+	wg.Add(1)
+	infob, err := GetMediaInfoJson(sfpath, &wg)
+	if err != nil {
+		lp.WLog("Error: could not get json data from file")
+		return vi, err
+	}
+	wg.Wait()
+
+	// Writing data to temporary json file
+	var raw map[string]interface{}
+	json.Unmarshal(infob, &raw)
+	info, err := json.Marshal(raw)
+	if err != nil {
+		lp.WLog("Error: could not marshal json file")
+		return vi, err
+	}
+
+	err = ioutil.WriteFile(tempjson, info, 0666)
+	if err != nil {
+		lp.WLog("Error: could not create json file")
+		return vi, err
+	}
+
+	// Run python file to get nesessary data from json file
+	gpath, err := filepath.Abs(datagen)
+	wg.Add(1)
+	err = generateDataFile(&wg, gpath)
+	wg.Wait()
+	if err != nil {
+		log.Println(err)
+		lp.WLog("Error: failed to generate video data")
+		return vi, err
+	}
+
+	// Write data to Vidinfo struct
+	vi, err = ParseFile(tempdata)
+	if err != nil || vi.IsEmpty() {
+		log.Println(err)
+		lp.WLog("Error: failed parsing data file")
+		return vi, err
+	}
+
+	return vi, nil
 }

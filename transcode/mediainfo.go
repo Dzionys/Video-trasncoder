@@ -1,34 +1,40 @@
 package transcoder
 
+import "reflect"
+
 type videotrack struct {
-	index      int
-	duration   string
-	width      int
-	height     int
-	frameRate  float64
-	codecName  string
-	fieldOrder string
+	Index      int     `json:"index"`
+	Duration   string  `json:"duration"`
+	Width      int     `json:"width"`
+	Height     int     `json:"height"`
+	FrameRate  float64 `json:"frameRate"`
+	CodecName  string  `json:"codecName"`
+	FieldOrder string  `json:"fieldOrder"`
 }
 
 type audiotrack struct {
-	index      int
-	channels   int
-	sampleRate int
-	language   string
-	bitRate    int
-	codecName  string
+	Index      int    `json:"index"`
+	Channels   int    `json:"channels"`
+	SampleRate int    `json:"sampleRate"`
+	Language   string `json:"language"`
+	BitRate    int    `json:"bitRate"`
+	CodecName  string `json:"codecName"`
 }
 
 type subtitle struct {
-	index    int
-	language string
+	Index    int    `json:"index"`
+	Language string `json:"language"`
 }
 
 type Vidinfo struct {
-	videotracks int
-	audiotracks int
-	subtitles   int
-	videotrack  []videotrack
-	audiotrack  []audiotrack
-	subtitle    []subtitle
+	Videotracks int          `json:"videotracks"`
+	Audiotracks int          `json:"audiotracks"`
+	Subtitles   int          `json:"subtitles"`
+	Videotrack  []videotrack `json:"videotrack"`
+	Audiotrack  []audiotrack `json:"audiotrack"`
+	Subtitle    []subtitle   `json:"subtitle "`
+}
+
+func (s Vidinfo) IsEmpty() bool {
+	return reflect.DeepEqual(s, Vidinfo{})
 }
