@@ -107,8 +107,8 @@ func getRatio(res string, duration int) {
 			per := (sec * 100) / duration
 			if lastPer != per {
 				lastPer = per
-				sse.UpdateLogMessage(fmt.Sprintf("Percentage done: %v proc.", per))
-			}
+				sse.UpdateLogMessage(fmt.Sprintf("Progress: %v %%", per))
+            }
 
 			allRes = ""
 		}
