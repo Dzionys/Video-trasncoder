@@ -21,7 +21,6 @@ var (
 	CONF    Config
 	allRes  = ""
 	lastPer = -1
-	//boiz    []Vid
 )
 
 func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
@@ -55,13 +54,13 @@ func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
 	}
 
 	// Audio cmd
-	// acode = ""
-	// for i := 0; i < d.Sudiotracks; i++ {
-	// 	if !(d.videotrack[0].frameRate < 25) {
-	// 		mapping += fmt.Sprintf(" -map 0:%v", d.Audiotrack[i].Index)
-	// 	}
-	// 	acode += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, CONF.ABW, d.Audiotrack[i].Language)
-	// }
+	acode = ""
+	for i := 0; i < d.Audiotracks; i++ {
+		if !(d.Videotrack[0].FrameRate < 25) {
+			mapping += fmt.Sprintf(" -map 0:%v", d.Audiotrack[i].Index)
+		}
+		acode += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, CONF.ABW, d.Audiotrack[i].Language)
+	}
 
 	// Subtitles cmd
 	scode = ""
@@ -97,6 +96,7 @@ func durToSec(dur string) (sec int) {
 	sec += second
 	return
 }
+
 func getRatio(res string, duration int) {
 	i := strings.Index(res, "time=")
 	if i >= 0 {
@@ -108,8 +108,7 @@ func getRatio(res string, duration int) {
 			if lastPer != per {
 				lastPer = per
 				sse.UpdateLogMessage(fmt.Sprintf("Progress: %v %%", per))
-            }
-
+			}
 			allRes = ""
 		}
 	}
@@ -132,12 +131,14 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 		return err
 	}
 
+	// Run commad
 	if err := cmd.Start(); err != nil {
 		log.Println(err)
 		return err
 	}
 	oneByte := make([]byte, 8)
 
+	// If duration is not provided dont sent progress bar
 	if dur == "" {
 		lp.WLog("Progress bar unavailable")
 	} else {
@@ -156,7 +157,7 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 	return nil
 }
 
-func ProcessVodFile(source string, debug bool) {
+func ProcessVodFile(source string, data Vidinfo, debug bool) {
 	lp.WLog("Starting VOD Processor..")
 	var (
 		err error
@@ -218,11 +219,13 @@ func ProcessVodFile(source string, debug bool) {
 
 	lp.WLog(fmt.Sprintf("Starting to process %s", source))
 
-	// Get video info
-	data, err := GetVidInfo(sfpath, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
-	if err != nil {
-		log.Println(err)
-		return
+	// If data is empty get video info
+	if data.IsEmpty() {
+		data, err = GetVidInfo(sfpath, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 
 	msg := "%v video track(s), %v audio track(s) and %v subtitle(s) found"

@@ -82,10 +82,9 @@ func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string)
 	json.Unmarshal(infob, &raw)
 	info, err := json.Marshal(raw)
 	if err != nil {
-		lp.WLog("Error: could not marshal json file")
+		lp.WLog("Error: failed to marshal json file")
 		return vi, err
 	}
-
 	err = ioutil.WriteFile(tempjson, info, 0666)
 	if err != nil {
 		lp.WLog("Error: could not create json file")

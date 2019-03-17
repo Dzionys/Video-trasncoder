@@ -90,7 +90,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		info, _ := json.Marshal(data)
+		info, err := json.Marshal(data)
+		if err != nil {
+			log.Println(err)
+			lp.WLog("Error: failed to marshal json file")
+		}
 		w.Write(info)
 
 		// for {
@@ -101,7 +105,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		lp.WLog("Information received")
 
 		// Start to transcode file.
-		go transcoder.ProcessVodFile(handler.Filename, true)
+		go transcoder.ProcessVodFile(handler.Filename, data, true)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -140,10 +144,10 @@ func main() {
 
 	// Make a new Broker instance
 	sse.B = &sse.Broker{
-		make(map[chan string]bool),
-		make(chan (chan string)),
-		make(chan (chan string)),
-		make(chan string),
+		Clients:        make(map[chan string]bool),
+		NewClients:     make(chan (chan string)),
+		DefunctClients: make(chan (chan string)),
+		Messages:       make(chan string),
 	}
 
 	// Start processing events

@@ -17,8 +17,6 @@ func ParseFile(f string) (Vidinfo, error) {
 	defer file.Close()
 	defer os.Remove(f)
 
-	println(file)
-
 	byteValue, err := ioutil.ReadAll(file)
 	if err != nil {
 		return vi, err
