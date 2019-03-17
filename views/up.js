@@ -1,7 +1,8 @@
 (function (d, axios) {
     "use strict";
     var inputFile = d.querySelector("#input-file");
-    var divNotification = d.querySelector("#alert");
+    var uploadForm = document.getElementById("upload-form")
+    var uploadFormLabel = document.getElementById("upload-form-label")
 
     inputFile.addEventListener("change", addFile);
 
@@ -23,10 +24,10 @@
 
     function onResponse(response) {
         var className = (response.status !== 400) ? "success" : "error";
-        divNotification.innerHTML = response.data;
-        divNotification.classList.add(className);
-        setTimeout(function() {
-            divNotification.classList.remove(className);
-        }, 3000);
+        uploadForm.className = "upload-form uploaded";
+        uploadFormLabel.style.height = uploadForm.clientHeight + "px";
+        uploadFormLabel.style.height = "0px";
+        uploadFormLabel.className ="upload-form-label uploaded";
+        // divNotification.innerHTML = response.data;
     }
 })(document, axios)

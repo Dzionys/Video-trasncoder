@@ -10,25 +10,35 @@
   <body onload="onLoaded();">
     <div class = "container">
       <h1>Video Transcoder</h1>
-      <form action="/upload" method="post" enctype="multipart/form-data" class="upload-form">
-        <input class="upload-form-input" type="file" name="file" id="input-file">
-        <label class="upload-form-label" for="input-file">
-            <i class="fa fa-upload upload-form-icon"></i> Select a file
-        </label>
-      </form>
+      <div class="upload-form" id="upload-form">
+        <form action="/upload" method="post" enctype="multipart/form-data">
+          <input class="upload-form-input" type="file" name="file" id="input-file">
+          <label class="upload-form-label" id="upload-form-label" for="input-file">
+              <i class="fa fa-upload upload-form-icon"></i> Select a file
+          </label>
+        </form>
+        <form action="/transcode" method="post">
+          <h4>File: <span id="filename">no file uploaded</span></h2>
+          <label for="codec">Codec</label>
+          <select name="codec" id="codec">
+            <option selected value="nochange">Keep as is</option>
+            <option value="h265">H265</option>
+          </select>
+        </form>
+      </div>
       <div id="main">
         <div id="titlebar">
           Log
           <div class="buttons">
               <span class="yellow"></span>
               <span class="green"></span>
-              <span class="red"></span>
+              <span class="red" id="close"></span>
           </div>
         </div>
         <code id="console"></code>
       </div>
     </div>
-    <!-- <div class="notification" id="alert"></div> -->
+
     <noscript>JavaScript is necessary!</noscript>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="api.js"></script>
