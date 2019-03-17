@@ -1,11 +1,11 @@
 function onLoaded(){
     //Connecting to SSE server
-    var source = new EventSource("/sse/dashboard");
-    var logg = "";
-    var currentmsg = "";
+    var source = new EventSource('/sse/dashboard');
+    var logg = '';
+    var currentmsg = '';
 
     source.onmessage = function (event){
-        if (logg === "") {
+        if (logg === '') {
             logg = '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br>';
             document.getElementById("filename").innerText = event.data
         } else if (event.data.indexOf("Error") > -1) {
@@ -14,12 +14,9 @@ function onLoaded(){
             logg = logg.replace(/^([\s\S]*<br>)(.*?Progress:.*?)(<br>)$/, `$1${event.data}$3`)
         } else {
             currentmsg = event.data;
-            logg += currentmsg + "<br>";
+            logg += currentmsg + '<br>';
         }
-
-        // console.log("OnMessage called:");
-        // console.dir(event);
-        // console.log(logg);
-        document.getElementById("console").innerHTML = logg;
+        
+        document.getElementById('console').innerHTML = logg;
     }
 }

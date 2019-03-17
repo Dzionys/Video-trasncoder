@@ -136,19 +136,21 @@ body,
     box-shadow: #24253444 0px 0px 6px;
     transition: 800ms;
     overflow: hidden;
+    user-select: none;
 }
 
 .upload-form-label.uploaded {
-    height: 0px;
-    padding: 0px;
+    background-color: #232b33;
+    color: #8eb8e5;
+    /* height: 0px;
+    padding: 0px; */
 }
 
-.upload-form-label:hover {
+.upload-form-label:not(.uploaded):hover {
     cursor: pointer;
     transform: scale(1.01);
     color: #8eb8e5;
     background-color: #172C64;
-
 }
 
 .upload-form-icon {

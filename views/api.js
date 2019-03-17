@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 function post(url, data) {
     return axios.post(url, data)
