@@ -126,8 +126,17 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 
 	cmd := exec.Command(head, parts...)
 
-	stdout, _ := cmd.StderrPipe()
-    cmd.Start()
+	// Creates pipe 
+	stdout, err := cmd.StderrPipe()
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if err := cmd.Start(); err != nil {
+		log.Println(err)
+		return err
+	}
 	oneByte := make([]byte, 8)
 	
 	if dur == "" {
