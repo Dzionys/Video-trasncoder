@@ -8,9 +8,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
-    "strconv"
 
 	"../lp"
 	"../sse"
@@ -18,11 +18,12 @@ import (
 )
 
 var (
-	wg    sync.WaitGroup
-	DEBUG = false
-	CONF  Config
-	allRes = ""
+	wg      sync.WaitGroup
+	DEBUG   = false
+	CONF    Config
+	allRes  = ""
 	lastPer = -1
+	//boiz    []Vid
 )
 
 func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
@@ -86,34 +87,34 @@ func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
 }
 
 func durToSec(dur string) (sec int) {
-    durAry := strings.Split(dur, ":")
-    if len(durAry) != 3 {
-        return
-    }
-    hr, _ := strconv.Atoi(durAry[0])
-    sec = hr * (60 * 60)
-    min, _ := strconv.Atoi(durAry[1])
-    sec += min * (60)
-    second, _ := strconv.Atoi(durAry[2])
-    sec += second
-    return
+	durAry := strings.Split(dur, ":")
+	if len(durAry) != 3 {
+		return
+	}
+	hr, _ := strconv.Atoi(durAry[0])
+	sec = hr * (60 * 60)
+	min, _ := strconv.Atoi(durAry[1])
+	sec += min * (60)
+	second, _ := strconv.Atoi(durAry[2])
+	sec += second
+	return
 }
 func getRatio(res string, duration int) {
-    i := strings.Index(res, "time=")
-    if i >= 0 {
-        time := res[i+5:]
-        if len(time) > 8 {
-            time = time[0:8]
-            sec := durToSec(time)
-            per := (sec * 100) / duration
-            if lastPer != per {
+	i := strings.Index(res, "time=")
+	if i >= 0 {
+		time := res[i+5:]
+		if len(time) > 8 {
+			time = time[0:8]
+			sec := durToSec(time)
+			per := (sec * 100) / duration
+			if lastPer != per {
 				lastPer = per
 				sse.UpdateLogMessage(fmt.Sprintf("Progress: %v %%", per))
             }
 
-            allRes = ""
-        }
-    }
+			allRes = ""
+		}
+	}
 }
 
 func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
@@ -126,7 +127,7 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 
 	cmd := exec.Command(head, parts...)
 
-	// Creates pipe 
+	// Creates pipe to listen to output
 	stdout, err := cmd.StderrPipe()
 	if err != nil {
 		log.Println(err)
@@ -138,7 +139,7 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 		return err
 	}
 	oneByte := make([]byte, 8)
-	
+
 	if dur == "" {
 		lp.WLog("Progress bar unavailable")
 	} else {
@@ -153,10 +154,6 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 			getRatio(allRes, duration)
 		}
 	}
-
-	// if err := cmd.Run(); err != nil {
-	// 	return err
-	// }
 
 	return nil
 }
