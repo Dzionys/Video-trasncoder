@@ -10,4 +10,5 @@ type Config struct {
 	VBW        int
 	ABW        int
 	DataGen    string
+	LogP       string
 }

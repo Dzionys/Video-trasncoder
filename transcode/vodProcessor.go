@@ -248,6 +248,9 @@ func ProcessVodFile(source string, data Vidinfo, debug bool) {
 		log.Println(err)
 		lp.WLog("Error: could not start trancoding")
 		return
+	} else if _, err = os.Stat(destinationfile); os.IsNotExist(err) {
+		lp.WLog("Error: transcoder failed")
+		return
 	}
 	wg.Wait()
 

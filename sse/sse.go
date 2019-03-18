@@ -89,7 +89,7 @@ func (b *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println("Finished HTTP request at ", r.URL.Path)
 }
 
-func UpdateFakeTerminalMessage(msg string) {
+func UpdateMessage(msg string) {
 	B.Messages <- msg
 }
 

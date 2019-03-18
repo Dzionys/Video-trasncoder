@@ -37,6 +37,8 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case "POST":
 
+		lp.WLog("Upload started")
+
 		//Starts readig file by chuncking
 		r.ParseMultipartForm(32 << 20)
 		file, handler, err := r.FormFile("file")
@@ -46,10 +48,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			lp.WLog("Error: failed to upload file")
 			return
 		}
-
-		sse.UpdateFakeTerminalMessage(handler.Filename)
-
-		//lp.WLog("Upload started")
 
 		// Checks if uploaded file with the same name already exists
 		if _, err := os.Stat("./videos/" + handler.Filename); err == nil {
@@ -76,14 +74,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		lp.WLog("Upload successful")
 
-		// Load config file
-		CONF, err := upConf()
-		if err != nil {
-			log.Println(err)
-			lp.WLog("Error: failed to load config file")
-			return
-		}
-
 		// Sending json response with video info
 		data, err := transcoder.GetVidInfo("./videos/"+handler.Filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
 		if err != nil {
@@ -97,14 +87,16 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Write(info)
 
+		// Wait for client to send information about transcoding
 		// for {
 		// 	if crGot {
 		// 		break
 		// 	}
 		// }
-		lp.WLog("Information received")
+		// lp.WLog("Information received")
 
 		// Start to transcode file.
+		sse.UpdateMessage(handler.Filename)
 		go transcoder.ProcessVodFile(handler.Filename, data, true)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -153,10 +145,29 @@ func main() {
 	// Start processing events
 	sse.B.Start()
 
+	// Load config file
+	var err error
+	CONF, err = upConf()
+	if err != nil {
+		log.Println(err)
+		lp.WLog("Error: failed to load config file")
+		return
+	}
+
+	// Write all logs to file
+	err = lp.OpenLogFile(CONF.LogP)
+	if err != nil {
+		log.Println("error while opening log file")
+		return
+	}
+	defer lp.LogFile.Close()
+
+	defer os.Remove(CONF.LogP)
+
 	http.Handle("/transcode", http.HandlerFunc(transcodeHandler))
 	http.Handle("/sse/dashboard", sse.B)
 	http.Handle("/upload", http.HandlerFunc(uploadHandler))
 	http.Handle("/", http.FileServer(http.Dir("views")))
-	log.Println("Listening on port: 8080...")
+	fmt.Println("Listening on port: 8080...")
 	log.Fatalf("Exited: %s", http.ListenAndServe(":8080", nil))
 }

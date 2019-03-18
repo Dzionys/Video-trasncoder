@@ -5,8 +5,8 @@ function onLoaded(){
     var currentmsg = '';
 
     source.onmessage = function (event){
-        if (logg === '') {
-            logg = '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br>';
+        if (!event.data.startsWith("<")) {
+            logg += '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br>';
             document.getElementById("filename").innerText = event.data
         } else if (event.data.indexOf("Error") > -1) {
             logg += '<span class="error">' + event.data + '</span><br>';

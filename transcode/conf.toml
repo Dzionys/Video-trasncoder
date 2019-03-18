@@ -7,3 +7,4 @@ TempTxt = "transcode/data.json"
 VBW = 2500
 ABW = 128
 DataGen = "transcode/generate_data.py"
+LogP = "info.log"

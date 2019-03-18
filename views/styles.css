@@ -127,7 +127,7 @@ body,
 
 .upload-form-label {
     /* display: inline-block; */
-    padding: 1rem;
+    padding: 0.65rem;
     color: #172C64;
     transition: transform .4s;
     flex-direction: column;
