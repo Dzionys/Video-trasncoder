@@ -78,7 +78,7 @@ func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
 
 	// Add all parts in one command line
 	cmd = fmt.Sprintf("ffmpeg -i %v %v %v %v %v %v %v -async 1 -vsync 1 %v", sf, ss, mapping, frate, vcode, acode, scode, df)
-	lp.WLog("Cmd line generated")
+	lp.WLog("Command line generated")
 
 	return cmd
 }
@@ -205,15 +205,23 @@ func ProcessVodFile(source string, data Vidinfo, debug bool) {
 	// Source file name without extension
 	sfnamewe := strings.Split(source, sfext)[0]
 
-	// File name after transcoding
-	if _, err = os.Stat(CONF.DD); os.IsNotExist(err) {
-		os.Mkdir(CONF.DD, 0777)
+	// If transcoding directory does not exist creat it
+	if _, err = os.Stat(CONF.TD); os.IsNotExist(err) {
+		os.Mkdir(CONF.TD, 0777)
 	}
+
+	// File name after transcoding
+	tempfile := fmt.Sprintf("%v%v.mp4", CONF.TD, sfnamewe)
+
+	// f
 	destinationfile := fmt.Sprintf("%v%v.mp4", CONF.DD, sfnamewe)
 
 	// Checks if transcoded file with the same name already exists
-	if _, err := os.Stat(destinationfile); err == nil {
-		lp.WLog(fmt.Sprintf("Error: file \"%v\" already exists", fullsfname))
+	if _, err := os.Stat(tempfile); err == nil {
+		lp.WLog(fmt.Sprintf("Error: file \"%v\" already transcoding", sfnamewe+".mp4"))
+		return
+	} else if _, err := os.Stat(destinationfile); err == nil {
+		lp.WLog(fmt.Sprintf("Error: file \"%v\" already exist in transcoded folder", sfnamewe+".mp4"))
 		return
 	}
 
@@ -233,29 +241,39 @@ func ProcessVodFile(source string, data Vidinfo, debug bool) {
 	lp.WLog(frmt)
 
 	// Generate command line
-	cmd := []byte(generateCmdLine(data, sfpath, destinationfile, fullsfname))
+	cmd := []byte(generateCmdLine(data, sfpath, tempfile, fullsfname))
 
 	// Run generated command line
 	lp.WLog("Starting to transcode")
-	wg.Add(1)
 	if debug {
 		dur = CONF.DebugEnd
 	} else {
 		dur = data.Videotrack[0].Duration
 	}
+	wg.Add(1)
 	err = runCmdCommand(string(cmd), dur, &wg)
+	wg.Wait()
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: could not start trancoding")
 		return
-	} else if _, err = os.Stat(destinationfile); os.IsNotExist(err) {
+	} else if out, err := os.Stat(tempfile); os.IsNotExist(err) || out == nil {
+		log.Println(err)
 		lp.WLog("Error: transcoder failed")
 		return
-	}
-	wg.Wait()
+	} else {
 
-	msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(destinationfile))
-	lp.WLog(msg)
+		// Removes source file and moves transcoded file to /videos/transcoded
+		os.Remove(sfpath)
+		if _, err = os.Stat(CONF.DD); os.IsNotExist(err) {
+			os.Mkdir(CONF.DD, 0777)
+		}
+		os.Rename(tempfile, destinationfile)
+		os.Remove(tempfile)
+
+		msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(tempfile))
+		lp.WLog(msg)
+	}
 }
 
 // Load config file

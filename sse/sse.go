@@ -36,7 +36,7 @@ func (b *Broker) Start() {
 				for s := range b.Clients {
 					s <- msg
 				}
-				log.Printf("Broadcast message to %d clients", len(b.Clients))
+				// log.Printf("Broadcast message to %d clients", len(b.Clients))
 			}
 		}
 	}()

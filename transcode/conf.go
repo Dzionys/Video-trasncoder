@@ -2,6 +2,7 @@ package transcoder
 
 type Config struct {
 	SD         string
+	TD         string
 	DD         string
 	DebugStart string
 	DebugEnd   string
