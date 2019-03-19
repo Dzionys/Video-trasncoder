@@ -74,33 +74,50 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		lp.WLog("Upload successful")
 
-		// Sending json response with video info
-		data, err := transcoder.GetVidInfo("./videos/"+handler.Filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+		data, err := writeJsonResponse(w, handler.Filename)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		info, err := json.Marshal(data)
-		if err != nil {
-			log.Println(err)
-			lp.WLog("Error: failed to marshal json file")
-		}
-		w.Write(info)
 
-		// Wait for client to send information about transcoding
-		// for {
-		// 	if crGot {
-		// 		break
-		// 	}
-		// }
-		// lp.WLog("Information received")
-
-		// Start to transcode file.
 		sse.UpdateMessage(handler.Filename)
-		go transcoder.ProcessVodFile(handler.Filename, data, true)
+
+		go waitForClientData(handler.Filename, data)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+}
+
+// Waits for client to send instructions about file transcoding
+func waitForClientData(filename string, data transcoder.Vidinfo) {
+	for {
+		if crGot {
+			lp.WLog("Information received")
+
+			// Strart transcoding if data is received
+			transcoder.ProcessVodFile(filename, data, true)
+			break
+		}
+	}
+}
+
+func writeJsonResponse(w http.ResponseWriter, filename string) (transcoder.Vidinfo, error) {
+
+	data, err := transcoder.GetVidInfo("./videos/"+filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+	if err != nil {
+		log.Println(err)
+		return data, err
+	}
+	info, err := json.Marshal(data)
+	if err != nil {
+		log.Println(err)
+		lp.WLog("Error: failed to marshal json file")
+		return data, err
+	}
+	w.WriteHeader(200)
+	w.Write(info)
+
+	return data, nil
 }
 
 func upConf() (transcoder.Config, error) {
