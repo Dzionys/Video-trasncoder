@@ -4,6 +4,7 @@ type Config struct {
 	SD         string
 	TD         string
 	DD         string
+	Debug      bool
 	DebugStart string
 	DebugEnd   string
 	TempJson   string

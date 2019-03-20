@@ -95,7 +95,7 @@ func waitForClientData(filename string, data transcoder.Vidinfo) {
 			lp.WLog("Information received")
 
 			// Strart transcoding if data is received
-			transcoder.ProcessVodFile(filename, data, true)
+			transcoder.ProcessVodFile(filename, data, CONF.Debug)
 			break
 		}
 	}
@@ -178,8 +178,6 @@ func main() {
 		return
 	}
 	defer lp.LogFile.Close()
-
-	defer os.Remove(CONF.LogP)
 
 	http.Handle("/transcode", http.HandlerFunc(transcodeHandler))
 	http.Handle("/sse/dashboard", sse.B)

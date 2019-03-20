@@ -60,6 +60,10 @@ def parseData():
                     v[vc]['frame_rate'] = round(fps, 3)
                 else:
                     v[vc]['frame_rate'] = 0
+                if 'display_aspect_ratio' in s:
+                    v[vc]['aspect_ratio'] = s['display_aspect_ratio']
+                else:
+                    v[vc]['aspect_ratio'] = ''
                 if 'field_order' in s:
                     v[vc]['field_order'] = s['field_order']
                 else:
@@ -133,6 +137,7 @@ def writeToFile():
             'height': v[j]['height'],
             'frameRate': v[j]['frame_rate'],
             'codecName': v[j]['codec_name'],
+            'aspectRatio': v[j]['aspect_ratio'],
             'fieldOrder': v[j]['field_order']
         }
 

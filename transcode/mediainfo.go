@@ -3,13 +3,14 @@ package transcoder
 import "reflect"
 
 type videotrack struct {
-	Index      int     `json:"index"`
-	Duration   string  `json:"duration"`
-	Width      int     `json:"width"`
-	Height     int     `json:"height"`
-	FrameRate  float64 `json:"frameRate"`
-	CodecName  string  `json:"codecName"`
-	FieldOrder string  `json:"fieldOrder"`
+	Index       int     `json:"index"`
+	Duration    string  `json:"duration"`
+	Width       int     `json:"width"`
+	Height      int     `json:"height"`
+	FrameRate   float64 `json:"frameRate"`
+	CodecName   string  `json:"codecName"`
+	AspectRatio string  `json:"aspectRatio"`
+	FieldOrder  string  `json:"fieldOrder"`
 }
 
 type audiotrack struct {
