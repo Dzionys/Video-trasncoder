@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"../lp"
 )
 
 // Not tested!!!
-func genCmdLine(crdata Video, vdata Vidinfo, sfname string, dfname string) (string, error) {
+func generateClientCmdLine(crdata Video, vdata Vidinfo, sf string, sfname string, df string) (string, error) {
 	var (
 		cmd       = ""
 		mapping   = ""
@@ -18,7 +20,7 @@ func genCmdLine(crdata Video, vdata Vidinfo, sfname string, dfname string) (stri
 	)
 
 	// Checks if debuging is set to true
-	if DEBUG {
+	if CONF.Debug {
 		debugIntr = "-ss " + CONF.DebugStart + " -t " + CONF.DebugEnd
 	}
 
@@ -131,7 +133,68 @@ func genCmdLine(crdata Video, vdata Vidinfo, sfname string, dfname string) (stri
 		scode += fmt.Sprintf(" -c:s:%[1]v copy -metadata:s:s:%[1]v language=%[2]v", st.stId, st.Language)
 	}
 
-	cmd = fmt.Sprintf("ffmpeg -i %v %v %v %v %v %v -async 1 -vsync 1 %v", sfname, debugIntr, acode, vcode, scode, mapping, dfname)
+	cmd = fmt.Sprintf("ffmpeg -i %v %v %v %v %v %v -async 1 -vsync 1 %v", sf, debugIntr, acode, vcode, scode, mapping, df)
 
 	return cmd, nil
+}
+
+func generateBaseCmdLine(d Vidinfo, sf string, df string, sfname string) string {
+	var (
+		cmd     string
+		mapping string
+		vcode   string
+		acode   string
+		scode   string
+		frate   string
+		ss      string
+	)
+
+	// Video cmd
+	if d.Videotrack[0].FrameRate < 25 {
+		baseln := "-r 25 -filter_complex [0:v]setpts=%v/25*PTS[v];[0:a]atempo=25/%v[a] -map [v] -map [a]"
+		frate = fmt.Sprintf(baseln, d.Videotrack[0].FrameRate, d.Videotrack[0].FrameRate)
+	} else {
+		frate = ""
+		mapping = fmt.Sprintf("-map 0:%v", d.Videotrack[0].Index)
+	}
+
+	if d.Videotrack[0].Width > 1280 || d.Videotrack[0].CodecName != "h265" {
+		vcode = "-c:v:0 libx265 -x265-params \"preset=slower:me=hex:no-rect=1:no-amp=1:rd=4:aq-mode=2:"
+		vcode += "aq-strength=0.5:psy-rd=1.0:psy-rdoq=0.2:bframes=3:min-keyint=1\" "
+		vcode += fmt.Sprintf("-b:v:0 %vk -metadata:s:v:0 name=\"%v\"", CONF.VBW, sfname)
+		if d.Videotrack[0].Width > 1280 {
+			vcode += " -filter:v:0 \"scale=iw*sar:ih,pad=iw:iw/16*9:0:(oh-ih)/2\" -aspect 16:9"
+		}
+	} else {
+		vcode = fmt.Sprintf(" -c:v:0 copy -metadata:s:v:0 name=\"%v\"", sfname)
+	}
+
+	// Audio cmd
+	acode = ""
+	for i := 0; i < d.Audiotracks; i++ {
+		if !(d.Videotrack[0].FrameRate < 25) {
+			mapping += fmt.Sprintf(" -map 0:%v", d.Audiotrack[i].Index)
+		}
+		acode += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, CONF.ABW, d.Audiotrack[i].Language)
+	}
+
+	// Subtitles cmd
+	scode = ""
+	if d.Subtitles > 0 {
+		for i := 0; i < d.Subtitles; i++ {
+			scode += fmt.Sprintf(" -c:s:%v copy -metadata:s:s:%v language=%v", d.Subtitle[i].Index, d.Subtitle[i].Index, d.Subtitle[i].Language)
+		}
+	}
+
+	// Set debug duration if debug is selected
+	ss = ""
+	if CONF.Debug {
+		ss = "-ss " + CONF.DebugStart + " -t " + CONF.DebugEnd
+	}
+
+	// Add all parts in one command line
+	cmd = fmt.Sprintf("ffmpeg -i %v %v %v %v %v %v %v -async 1 -vsync 1 %v", sf, ss, mapping, frate, vcode, acode, scode, df)
+	lp.WLog("Command line generated")
+
+	return cmd
 }

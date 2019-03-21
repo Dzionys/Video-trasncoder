@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"./lp"
@@ -20,7 +21,7 @@ var (
 	uploadtemplate = template.Must(template.ParseGlob("upload.html"))
 	vf             transcoder.Video
 	wg             sync.WaitGroup
-	crGot          = false
+	crGot          = 0
 	CONF           transcoder.Config
 )
 
@@ -49,6 +50,18 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// Check if video file format is allowed
+		allowed := false
+		for _, ave := range CONF.FileTypes {
+			if filepath.Ext(handler.Filename) == ave {
+				allowed = true
+			}
+		}
+		if !allowed {
+			lp.WLog("Error: this file format is not allowed " + filepath.Ext(handler.Filename))
+			return
+		}
+
 		// Checks if uploaded file with the same name already exists
 		if _, err := os.Stat("./videos/" + handler.Filename); err == nil {
 			lp.WLog(fmt.Sprintf("Error: file \"%v\" already exists", handler.Filename))
@@ -70,6 +83,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		if _, err := io.Copy(dst, file); err != nil {
 			log.Println(err)
 			lp.WLog("Error: failed to write file")
+			removeFile("./videos/" + handler.Filename)
 			return
 		}
 		lp.WLog("Upload successful")
@@ -77,12 +91,18 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		data, err := writeJsonResponse(w, handler.Filename)
 		if err != nil {
 			log.Println(err)
+			lp.WLog("Error: failed send video data to client")
+			removeFile("./videos/" + handler.Filename)
 			return
 		}
 
 		sse.UpdateMessage(handler.Filename)
 
-		go waitForClientData(handler.Filename, data)
+		if CONF.Advanced {
+			go waitForClientData(handler.Filename, data)
+		} else {
+			go transcoder.ProcessVodFile(handler.Filename, data, vf)
+		}
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -91,16 +111,21 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 // Waits for client to send instructions about file transcoding
 func waitForClientData(filename string, data transcoder.Vidinfo) {
 	for {
-		if crGot {
+		if crGot == 1 {
 			lp.WLog("Information received")
 
 			// Strart transcoding if data is received
-			transcoder.ProcessVodFile(filename, data, CONF.Debug)
+			transcoder.ProcessVodFile(filename, data, vf)
 			break
+		} else if crGot == 2 {
+			lp.WLog("Error: failed receiving information from client")
+			removeFile("./videos/" + filename)
+			return
 		}
 	}
 }
 
+// Send json response after file upload
 func writeJsonResponse(w http.ResponseWriter, filename string) (transcoder.Vidinfo, error) {
 
 	data, err := transcoder.GetVidInfo("./videos/"+filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
@@ -111,7 +136,6 @@ func writeJsonResponse(w http.ResponseWriter, filename string) (transcoder.Vidin
 	info, err := json.Marshal(data)
 	if err != nil {
 		log.Println(err)
-		lp.WLog("Error: failed to marshal json file")
 		return data, err
 	}
 	w.WriteHeader(200)
@@ -135,6 +159,7 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := r.ParseForm(); err != nil {
+		crGot = 2
 		log.Println(err)
 		return
 	}
@@ -143,10 +168,18 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&vf)
 	if err != nil {
+		crGot = 2
 		log.Println(err)
 		return
 	}
-	crGot = true
+	crGot = 1
+}
+
+func removeFile(filepath string) {
+	if os.Remove(filepath) != nil {
+		lp.WLog("Error: failed removing source file")
+	}
+	return
 }
 
 func main() {
@@ -174,7 +207,7 @@ func main() {
 	// Write all logs to file
 	err = lp.OpenLogFile(CONF.LogP)
 	if err != nil {
-		log.Println("error while opening log file")
+		lp.WLog("Error: failed open log file")
 		return
 	}
 	defer lp.LogFile.Close()

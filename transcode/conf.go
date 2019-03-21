@@ -13,4 +13,6 @@ type Config struct {
 	ABW        int
 	DataGen    string
 	LogP       string
+	Advanced   bool
+	FileTypes  []string
 }

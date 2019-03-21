@@ -73,6 +73,7 @@ func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string)
 	infob, err := GetMediaInfoJson(sfpath, &wg)
 	if err != nil {
 		lp.WLog("Error: could not get json data from file")
+		removeFile(sfpath)
 		return vi, err
 	}
 	wg.Wait()
@@ -83,11 +84,13 @@ func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string)
 	info, err := json.Marshal(raw)
 	if err != nil {
 		lp.WLog("Error: failed to marshal json file")
+		removeFile(sfpath)
 		return vi, err
 	}
 	err = ioutil.WriteFile(tempjson, info, 0666)
 	if err != nil {
 		lp.WLog("Error: could not create json file")
+		removeFile(sfpath)
 		return vi, err
 	}
 
@@ -99,6 +102,7 @@ func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string)
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: failed to generate video data")
+		removeFile(sfpath)
 		return vi, err
 	}
 
@@ -107,6 +111,7 @@ func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string)
 	if err != nil || vi.IsEmpty() {
 		log.Println(err)
 		lp.WLog("Error: failed parsing data file")
+		removeFile(sfpath)
 		return vi, err
 	}
 

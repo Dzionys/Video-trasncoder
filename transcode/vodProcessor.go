@@ -23,66 +23,6 @@ var (
 	lastPer = -1
 )
 
-func generateCmdLine(d Vidinfo, sf string, df string, sfname string) string {
-	var (
-		cmd     string
-		mapping string
-		vcode   string
-		acode   string
-		scode   string
-		frate   string
-		ss      string
-	)
-
-	// Video cmd
-	if d.Videotrack[0].FrameRate < 25 {
-		baseln := "-r 25 -filter_complex [0:v]setpts=%v/25*PTS[v];[0:a]atempo=25/%v[a] -map [v] -map [a]"
-		frate = fmt.Sprintf(baseln, d.Videotrack[0].FrameRate, d.Videotrack[0].FrameRate)
-	} else {
-		frate = ""
-		mapping = fmt.Sprintf("-map 0:%v", d.Videotrack[0].Index)
-	}
-	if d.Videotrack[0].Width > 1280 || d.Videotrack[0].CodecName != "h265" {
-		vcode = "-c:v:0 libx265 -x265-params \"preset=slower:me=hex:no-rect=1:no-amp=1:rd=4:aq-mode=2:"
-		vcode += "aq-strength=0.5:psy-rd=1.0:psy-rdoq=0.2:bframes=3:min-keyint=1\" "
-		vcode += fmt.Sprintf("-b:v:0 %vk -metadata:s:v:0 name=\"%v\"", CONF.VBW, sfname)
-		if d.Videotrack[0].Width > 1280 {
-			vcode += " -filter:v:0 \"scale=iw*sar:ih,pad=iw:iw/16*9:0:(oh-ih)/2\" -aspect 16:9"
-		}
-	} else {
-		vcode = fmt.Sprintf(" -c:v:0 copy -metadata:s:v:0 name=\"%v\"", sfname)
-	}
-
-	// Audio cmd
-	acode = ""
-	for i := 0; i < d.Audiotracks; i++ {
-		if !(d.Videotrack[0].FrameRate < 25) {
-			mapping += fmt.Sprintf(" -map 0:%v", d.Audiotrack[i].Index)
-		}
-		acode += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, CONF.ABW, d.Audiotrack[i].Language)
-	}
-
-	// Subtitles cmd
-	scode = ""
-	if d.Subtitles > 0 {
-		for i := 0; i < d.Subtitles; i++ {
-			scode += fmt.Sprintf(" -c:s:%v copy -metadata:s:s:%v language=%v", d.Subtitle[i].Index, d.Subtitle[i].Index, d.Subtitle[i].Language)
-		}
-	}
-
-	// Set debug duration if debug is selected
-	ss = ""
-	if DEBUG {
-		ss = "-ss " + CONF.DebugStart + " -t " + CONF.DebugEnd
-	}
-
-	// Add all parts in one command line
-	cmd = fmt.Sprintf("ffmpeg -i %v %v %v %v %v %v %v -async 1 -vsync 1 %v", sf, ss, mapping, frate, vcode, acode, scode, df)
-	lp.WLog("Command line generated")
-
-	return cmd
-}
-
 func durToSec(dur string) (sec int) {
 	durAry := strings.Split(dur, ":")
 	if len(durAry) != 3 {
@@ -157,23 +97,25 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 	return nil
 }
 
-func ProcessVodFile(source string, data Vidinfo, debug bool) {
+func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 	lp.WLog("Starting VOD Processor..")
 	var (
 		err error
 		dur string
+		cmd string
 	)
+
+	// Path to source file
+	sfpath := CONF.SD + source
 
 	// Load config file
 	CONF, err = upConf()
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: failed to load config file")
+		removeFile(sfpath)
 		return
 	}
-
-	DEBUG = debug
-	sfpath := CONF.SD + source
 
 	// Checks if source file exists
 	if source != "" {
@@ -181,13 +123,16 @@ func ProcessVodFile(source string, data Vidinfo, debug bool) {
 			lp.WLog("File found")
 		} else if os.IsNotExist(err) {
 			lp.WLog("Error: file does not exist")
+			removeFile(sfpath)
 			return
 		} else {
 			log.Println(err)
 			lp.WLog("Error: file may or may not exist")
+			removeFile(sfpath)
 			return
 		}
 	} else {
+		removeFile(sfpath)
 		return
 	}
 
@@ -196,14 +141,12 @@ func ProcessVodFile(source string, data Vidinfo, debug bool) {
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: failed to get full file name")
+		removeFile(sfpath)
 		return
 	}
 
-	// Source file extension
-	sfext := filepath.Ext(fullsfname)
-
 	// Source file name without extension
-	sfnamewe := strings.Split(source, sfext)[0]
+	sfnamewe := strings.Split(source, filepath.Ext(fullsfname))[0]
 
 	// If transcoding directory does not exist creat it
 	if _, err = os.Stat(CONF.TD); os.IsNotExist(err) {
@@ -219,9 +162,11 @@ func ProcessVodFile(source string, data Vidinfo, debug bool) {
 	// Checks if transcoded file with the same name already exists
 	if _, err := os.Stat(tempfile); err == nil {
 		lp.WLog(fmt.Sprintf("Error: file \"%v\" already transcoding", sfnamewe+".mp4"))
+		removeFile(sfpath)
 		return
 	} else if _, err := os.Stat(destinationfile); err == nil {
 		lp.WLog(fmt.Sprintf("Error: file \"%v\" already exist in transcoded folder", sfnamewe+".mp4"))
+		removeFile(sfpath)
 		return
 	}
 
@@ -232,6 +177,7 @@ func ProcessVodFile(source string, data Vidinfo, debug bool) {
 		data, err = GetVidInfo(sfpath, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
 		if err != nil {
 			log.Println(err)
+			removeFile(sfpath)
 			return
 		}
 	}
@@ -241,25 +187,31 @@ func ProcessVodFile(source string, data Vidinfo, debug bool) {
 	lp.WLog(frmt)
 
 	// Generate command line
-	cmd := []byte(generateCmdLine(data, sfpath, tempfile, fullsfname))
+	if CONF.Advanced {
+		cmd, _ = generateClientCmdLine(cldata, data, sfpath, tempfile, fullsfname)
+	} else {
+		cmd = generateBaseCmdLine(data, sfpath, tempfile, fullsfname)
+	}
 
 	// Run generated command line
 	lp.WLog("Starting to transcode")
-	if debug {
+	if CONF.Debug {
 		dur = CONF.DebugEnd
 	} else {
 		dur = data.Videotrack[0].Duration
 	}
 	wg.Add(1)
-	err = runCmdCommand(string(cmd), dur, &wg)
+	err = runCmdCommand(cmd, dur, &wg)
 	wg.Wait()
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: could not start trancoding")
+		removeFile(sfpath)
 		return
 	} else if out, err := os.Stat(tempfile); os.IsNotExist(err) || out == nil {
 		log.Println(err)
 		lp.WLog("Error: transcoder failed")
+		removeFile(sfpath)
 		return
 	} else {
 
@@ -274,6 +226,13 @@ func ProcessVodFile(source string, data Vidinfo, debug bool) {
 		msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(tempfile))
 		lp.WLog(msg)
 	}
+}
+
+func removeFile(filepath string) {
+	if os.Remove(filepath) != nil {
+		lp.WLog("Error: failed to remove source file")
+	}
+	return
 }
 
 // Load config file
