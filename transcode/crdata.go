@@ -15,6 +15,7 @@ type (
 		AtId     int
 		AtCodec  string
 		Language string
+		Channels int
 	}
 	Sub struct {
 		stId     int
