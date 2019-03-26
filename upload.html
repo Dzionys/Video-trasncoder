@@ -7,47 +7,74 @@
     <link rel="stylesheet" href="styles.css">
     <title>Video Upload</title>
   </head>
-  <body onload="onLoaded();">
-    <div class = "container">
+
+  <body>
+    <div class="container">
       <h1>Video Transcoder</h1>
       <div class="upload-form" id="upload-form">
-        <form action="/upload" method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data">
           <input class="upload-form-input" type="file" name="file" id="input-file">
           <label class="upload-form-label" id="upload-form-label" for="input-file">
-              <i class="fa fa-upload upload-form-icon"></i> Select a file
+            <i class="fa fa-upload upload-form-icon"></i> Select a file
           </label>
         </form>
-        <form action="/transcode" method="post" class="options">
+        <form method="post" id="transcode" class="transcode-form">
           <h4>File: <span id="filename"></span>, <span id="resolution"></span>, <span id="codec"></span></h2>
-          <label for="codec">Codec</label>
-          <select name="codec" id="codec-select">
-            <option selected value="nochange">Keep as is</option>
-            <option value="h265">H265</option>
-            <option value="h264">H264</option>
-          </select>
-          <label for="resolution">Resolution</label>
-          <select name="resolution" id="resolution-select">
-            <option selected value="nochange">Keep as is</option>
-            <option value="1920:1080">1080p</option>
-            <option value="1280:720">720p</option>
-            <option value="858:480">480p</option>
-            <option value="480:360">360p</option>
-          </select>
-          <label for="audio">Audio</label>
-          <select name="audio" id="audio-select">
-            <option selected value="nochange">Keep as is</option>
-            <option value="acc">acc</option>
-          </select>
-          <input type="submit" value="Submit">
+          
+          <div class="form-group">
+            <span>
+              <label for="codec">Codec</label>
+              <select name="codec" id="codec-select">
+                <option selected value="nochange">Keep as is</option>
+                <option value="h265">H265</option>
+                <option value="h264">H264</option>
+              </select>
+            </span>
+
+            <span>
+              <label for="resolution">Resolution</label>
+              <select name="resolution">
+                <option selected value="nochange">Keep as is</option>
+                <option value="1920:1080">1080p</option>
+                <option value="1280:720">720p</option>
+                <option value="858:480">480p</option>
+                <option value="480:360">360p</option>
+              </select>
+            </span>
+
+            <span>
+              <label for="audio">Audio</label>
+              <select name="audio">
+                <option selected value="nochange">Keep as is</option>
+                <option value="acc">acc</option>
+              </select>
+            </span>
+          </div>
+
+          <div class="form-group">
+            <span>
+              <label for="audio-tracks">Audio Tracks</label>
+              <select name="audio-tracks" id="audio-tracks">
+              </select>
+            </span>
+
+            <span>
+              <label for="subtitle-tracks">Subtitles</label>
+              <select name="subtitle-tracks" id="subtitle-tracks">
+              </select>
+            </span>
+          </div>
+
+          <input type="submit" value="Submit" id="transcode-submit">
         </form>
       </div>
       <div id="main">
         <div id="titlebar">
           Log
           <div class="buttons">
-              <span class="yellow"></span>
-              <span class="green"></span>
-              <span class="red" id="close"></span>
+            <span class="yellow"></span>
+            <span class="green"></span>
+            <span class="red" id="close"></span>
           </div>
         </div>
         <code id="console"></code>
@@ -56,8 +83,7 @@
 
     <noscript>JavaScript is necessary!</noscript>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script src="api.js"></script>
-    <script src="up.js"></script>
-    <script src="sse.js"></script>
+    <script src="main.js"></script>
+
   </body>
 </html>
