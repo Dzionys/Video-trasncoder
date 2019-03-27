@@ -8,7 +8,7 @@ import (
 	"../lp"
 )
 
-// Not tested!!!
+// Needs more testing !!!
 func generateClientCmdLine(crdata Video, vdata Vidinfo, sf string, sfname string, df string) (string, error) {
 	var (
 		cmd       = ""
@@ -44,12 +44,11 @@ func generateClientCmdLine(crdata Video, vdata Vidinfo, sf string, sfname string
 			maps += "-map [scaled]"
 			filter_complex += fmt.Sprintf("[0:v]scale=%v:%v[%v];", res[0], res[1], vpipe)
 
-		} else {
-			maps = "-map [v] -map [a]"
 		}
 
 		// Change frame rate
 		if crdata.FrameRate != vdata.Videotrack[0].FrameRate {
+			maps = "-map [v] -map [a]"
 			fps = fmt.Sprintf(" -r %v", crdata.FrameRate)
 			bline := "[%[3]v]setpts=%[2]v/%[1]v*PTS[v];[0:a]atempo=%[1]v/%[2]v[a]"
 			filter_complex += fmt.Sprintf(bline, crdata.FrameRate, vdata.Videotrack[0].FrameRate, vpipe)
@@ -73,7 +72,7 @@ func generateClientCmdLine(crdata Video, vdata Vidinfo, sf string, sfname string
 	}
 
 	// Changes video codec
-	if crdata.VtCodec != "none" {
+	if crdata.VtCodec != "nochange" {
 		switch crdata.VtCodec {
 
 		case "h264":
@@ -118,7 +117,7 @@ func generateClientCmdLine(crdata Video, vdata Vidinfo, sf string, sfname string
 
 				// Change audio codec to aac
 				if cAt.AtCodec != sAt.CodecName {
-					acode += fmt.Sprintf(bline, cAt.AtId, cAt.Channels*64, cAt.Language)
+					acode += fmt.Sprintf(bline, cAt.AtId, cAt.Channels*64, cAt.Language, channels)
 
 				} else {
 					acode += channels

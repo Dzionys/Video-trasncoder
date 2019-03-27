@@ -13,12 +13,15 @@ Your browser must support HTML5 Sever-Sent-Events.
 
 ### External golang libraries
   - github.com/BurntSushi/toml
+  - github.com/mattn/go-sqlite3
 
 ```sh
 $ go get github.com/BurntSushi/toml
+$ go get github.com/mattn/go-sqlite3
 ```
 
 ### Run
+Before running server check configuration file located in /transcode/conf.toml and change it based on your preferences.
 ```sh
 $ go run server.go
 ```

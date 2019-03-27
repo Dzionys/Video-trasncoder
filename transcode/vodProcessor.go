@@ -105,17 +105,17 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 		cmd string
 	)
 
-	// Path to source file
-	sfpath := CONF.SD + source
-
 	// Load config file
 	CONF, err = upConf()
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: failed to load config file")
-		removeFile(sfpath)
+		removeFile("videos/" + source)
 		return
 	}
+
+	// Path to source file
+	sfpath := CONF.SD + source
 
 	// Checks if source file exists
 	if source != "" {
@@ -123,7 +123,6 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 			lp.WLog("File found")
 		} else if os.IsNotExist(err) {
 			lp.WLog("Error: file does not exist")
-			removeFile(sfpath)
 			return
 		} else {
 			log.Println(err)
@@ -188,7 +187,7 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 
 	// Generate command line
 	if CONF.Advanced {
-		cmd, _ = generateClientCmdLine(cldata, data, sfpath, tempfile, fullsfname)
+		cmd, _ = generateClientCmdLine(cldata, data, sfpath, fullsfname, tempfile)
 	} else {
 		cmd = generateBaseCmdLine(data, sfpath, tempfile, fullsfname)
 	}
@@ -206,11 +205,13 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: could not start trancoding")
+		log.Printf("Error cmd line: %v", cmd)
 		removeFile(sfpath)
 		return
 	} else if out, err := os.Stat(tempfile); os.IsNotExist(err) || out == nil {
 		log.Println(err)
 		lp.WLog("Error: transcoder failed")
+		log.Printf("Error cmd line: %v", cmd)
 		removeFile(sfpath)
 		return
 	} else {

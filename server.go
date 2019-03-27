@@ -119,7 +119,7 @@ func waitForClientData(filename string, data transcoder.Vidinfo) {
 			break
 		} else if crGot == 2 {
 			lp.WLog("Error: failed receiving information from client")
-			removeFile("./videos/" + filename)
+			removeFile("videos/" + filename)
 			return
 		}
 	}
@@ -155,12 +155,14 @@ func upConf() (transcoder.Config, error) {
 
 func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
+		w.WriteHeader(444)
 		return
 	}
 
 	if err := r.ParseForm(); err != nil {
 		crGot = 2
 		log.Println(err)
+		w.WriteHeader(500)
 		return
 	}
 
@@ -170,8 +172,10 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		crGot = 2
 		log.Println(err)
+		w.WriteHeader(500)
 		return
 	}
+	w.WriteHeader(200)
 	crGot = 1
 }
 
