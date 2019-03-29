@@ -1,3 +1,4 @@
 videos/*
 !videos/.gitkeep
 info.log
+data.db

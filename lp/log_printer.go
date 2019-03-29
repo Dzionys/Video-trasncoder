@@ -3,15 +3,13 @@ package lp
 import (
 	"log"
 	"os"
-
-	"../sse"
 )
 
 var LogFile *os.File
 
 func WLog(msg string) {
 	log.Println(msg)
-	sse.UpdateLogMessage(msg)
+	UpdateLogMessage(msg)
 }
 
 func OpenLogFile(filepath string) error {

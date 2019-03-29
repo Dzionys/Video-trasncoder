@@ -42,15 +42,19 @@ func generateClientCmdLine(crdata Video, vdata Vidinfo, sf string, sfname string
 		if crdata.VtRes != svtres {
 			vpipe = "scaled"
 			maps += "-map [scaled]"
-			filter_complex += fmt.Sprintf("[0:v]scale=%v:%v[%v];", res[0], res[1], vpipe)
-
+			filter_complex += fmt.Sprintf("[0:v]scale=%v:%v[%v]", res[0], res[1], vpipe)
 		}
 
 		// Change frame rate
 		if crdata.FrameRate != vdata.Videotrack[0].FrameRate {
 			maps = "-map [v] -map [a]"
 			fps = fmt.Sprintf(" -r %v", crdata.FrameRate)
-			bline := "[%[3]v]setpts=%[2]v/%[1]v*PTS[v];[0:a]atempo=%[1]v/%[2]v[a]"
+			var bline string
+			if vpipe == "scaled" {
+				bline = ";[%[3]v]setpts=%[2]v/%[1]v*PTS[v];[0:a]atempo=%[1]v/%[2]v[a]"
+			} else {
+				bline = "[%[3]v]setpts=%[2]v/%[1]v*PTS[v];[0:a]atempo=%[1]v/%[2]v[a]"
+			}
 			filter_complex += fmt.Sprintf(bline, crdata.FrameRate, vdata.Videotrack[0].FrameRate, vpipe)
 
 		} else {

@@ -14,7 +14,7 @@ type (
 
 func upTables() (tableQueries, error) {
 	var tables tableQueries
-	if _, err := toml.DecodeFile("db/dbTable.toml", &tables); err != nil {
+	if _, err := toml.DecodeFile("database/tables.toml", &tables); err != nil {
 		return tables, err
 	}
 

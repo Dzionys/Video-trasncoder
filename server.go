@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	db "./database"
 	"./lp"
-	"./sse"
 	transcoder "./transcode"
 	"github.com/BurntSushi/toml"
 )
@@ -96,7 +96,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		sse.UpdateMessage(handler.Filename)
+		lp.UpdateMessage(handler.Filename)
 
 		if CONF.Advanced {
 			go waitForClientData(handler.Filename, data)
@@ -189,7 +189,7 @@ func removeFile(filepath string) {
 func main() {
 
 	// Make a new Broker instance
-	sse.B = &sse.Broker{
+	lp.B = &lp.Broker{
 		Clients:        make(map[chan string]bool),
 		NewClients:     make(chan (chan string)),
 		DefunctClients: make(chan (chan string)),
@@ -197,27 +197,34 @@ func main() {
 	}
 
 	// Start processing events
-	sse.B.Start()
+	lp.B.Start()
 
 	// Load config file
 	var err error
 	CONF, err = upConf()
 	if err != nil {
+		log.Println("Error: failed to load config file")
 		log.Println(err)
-		lp.WLog("Error: failed to load config file")
 		return
 	}
 
 	// Write all logs to file
 	err = lp.OpenLogFile(CONF.LogP)
 	if err != nil {
-		lp.WLog("Error: failed open log file")
+		log.Println("Error: failed open log file")
 		return
 	}
 	defer lp.LogFile.Close()
 
+	//Open database
+	err = db.OpenDatabase()
+	if err != nil {
+		log.Println("Error: failed open database")
+		return
+	}
+
 	http.Handle("/transcode", http.HandlerFunc(transcodeHandler))
-	http.Handle("/sse/dashboard", sse.B)
+	http.Handle("/sse/dashboard", lp.B)
 	http.Handle("/upload", http.HandlerFunc(uploadHandler))
 	http.Handle("/", http.FileServer(http.Dir("views")))
 	fmt.Println("Listening on port: 8080...")
