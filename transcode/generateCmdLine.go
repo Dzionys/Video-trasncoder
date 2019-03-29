@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	"../lp"
+	vd "../videodata"
 )
 
 // Needs more testing !!!
-func generateClientCmdLine(crdata Video, vdata Vidinfo, sf string, sfname string, df string) (string, error) {
+func generateClientCmdLine(crdata vd.Video, vdata vd.Vidinfo, sf string, sfname string, df string) (string, error) {
 	var (
 		cmd       = ""
 		mapping   = ""
@@ -133,7 +134,7 @@ func generateClientCmdLine(crdata Video, vdata Vidinfo, sf string, sfname string
 	// Subtitle part ------------------------------------------
 
 	for _, st := range crdata.SubtitleT {
-		scode += fmt.Sprintf(" -c:s:%[1]v copy -metadata:s:s:%[1]v language=%[2]v", st.stId, st.Language)
+		scode += fmt.Sprintf(" -c:s:%[1]v copy -metadata:s:s:%[1]v language=%[2]v", st.StId, st.Language)
 	}
 
 	cmd = fmt.Sprintf("ffmpeg -i %v %v %v %v %v %v -async 1 -vsync 1 %v", sf, debugIntr, acode, vcode, scode, mapping, df)
@@ -141,7 +142,7 @@ func generateClientCmdLine(crdata Video, vdata Vidinfo, sf string, sfname string
 	return cmd, nil
 }
 
-func generateBaseCmdLine(d Vidinfo, sf string, df string, sfname string) string {
+func generateBaseCmdLine(d vd.Vidinfo, sf string, df string, sfname string) string {
 	var (
 		cmd     string
 		mapping string

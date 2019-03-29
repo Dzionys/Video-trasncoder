@@ -1,4 +1,4 @@
-package transcoder
+package vd
 
 type (
 	Video struct {
@@ -17,7 +17,7 @@ type (
 		Channels int
 	}
 	Sub struct {
-		stId     int
+		StId     int
 		Language string
 	}
 )

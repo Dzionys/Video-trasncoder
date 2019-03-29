@@ -14,12 +14,13 @@ import (
 	db "./database"
 	"./lp"
 	transcoder "./transcode"
+	vd "./videodata"
 	"github.com/BurntSushi/toml"
 )
 
 var (
 	uploadtemplate = template.Must(template.ParseGlob("upload.html"))
-	vf             transcoder.Video
+	vf             vd.Video
 	wg             sync.WaitGroup
 	crGot          = 0
 	CONF           transcoder.Config
@@ -83,7 +84,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		if _, err := io.Copy(dst, file); err != nil {
 			log.Println(err)
 			lp.WLog("Error: failed to write file")
-			removeFile("./videos/" + handler.Filename)
+			removeFile("./videos/", handler.Filename)
 			return
 		}
 		lp.WLog("Upload successful")
@@ -92,7 +93,14 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			log.Println(err)
 			lp.WLog("Error: failed send video data to client")
-			removeFile("./videos/" + handler.Filename)
+			removeFile("./videos/", handler.Filename)
+			return
+		}
+
+		err = db.InsertVideo(data, handler.Filename, "Preparing")
+		if err != nil {
+			lp.WLog("Error: failed to insert video data in database")
+			log.Println(err)
 			return
 		}
 
@@ -102,6 +110,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			go waitForClientData(handler.Filename, data)
 		} else {
 			go transcoder.ProcessVodFile(handler.Filename, data, vf)
+			resetData()
 		}
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -109,26 +118,27 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Waits for client to send instructions about file transcoding
-func waitForClientData(filename string, data transcoder.Vidinfo) {
+func waitForClientData(filename string, data vd.Vidinfo) {
 	for {
 		if crGot == 1 {
 			lp.WLog("Information received")
 
 			// Strart transcoding if data is received
 			transcoder.ProcessVodFile(filename, data, vf)
+			resetData()
 			break
 		} else if crGot == 2 {
 			lp.WLog("Error: failed receiving information from client")
-			removeFile("videos/" + filename)
+			removeFile("videos/", filename)
 			return
 		}
 	}
 }
 
 // Send json response after file upload
-func writeJsonResponse(w http.ResponseWriter, filename string) (transcoder.Vidinfo, error) {
+func writeJsonResponse(w http.ResponseWriter, filename string) (vd.Vidinfo, error) {
 
-	data, err := transcoder.GetVidInfo("./videos/"+filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+	data, err := transcoder.GetVidInfo("./videos/", filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
 	if err != nil {
 		log.Println(err)
 		return data, err
@@ -179,11 +189,18 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	crGot = 1
 }
 
-func removeFile(filepath string) {
-	if os.Remove(filepath) != nil {
+func removeFile(path string, filename string) {
+	resetData()
+	if os.Remove(path+filename) != nil {
 		lp.WLog("Error: failed removing source file")
 	}
+	db.RemoveVideo(filename)
 	return
+}
+
+func resetData() {
+	crGot = 0
+	vf = vd.Video{}
 }
 
 func main() {

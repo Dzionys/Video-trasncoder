@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
+
+	vd "../videodata"
 )
 
-func ParseFile(f string) (Vidinfo, error) {
+func ParseFile(f string) (vd.Vidinfo, error) {
 	var (
-		vi Vidinfo
+		vi vd.Vidinfo
 	)
 	file, err := os.Open(f)
 	if err != nil {

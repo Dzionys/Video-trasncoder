@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	transcoder "../transcode"
+	vd "../videodata"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -63,6 +63,25 @@ func OpenDatabase() error {
 	return nil
 }
 
+func UpdateState(name string, state string) error {
+	var (
+		err       error
+		query     string
+		statement *sql.Stmt
+	)
+
+	clms := []string{fmt.Sprintf("State='%v'", state)}
+	query = getUpdateQuery(clms, "Video", fmt.Sprintf("Name='%v'", name))
+	statement, err = DB.Prepare(query)
+	if err != nil {
+		log.Println("Error query: " + query)
+		return err
+	}
+	statement.Exec()
+
+	return nil
+}
+
 func RemoveVideo(name string) error {
 	var (
 		err       error
@@ -70,9 +89,10 @@ func RemoveVideo(name string) error {
 		statement *sql.Stmt
 	)
 
-	query = fmt.Sprintf("DELETE FROM Video WHERE Name='%v'", name)
+	query = getDeleteQuery("Video", fmt.Sprintf("Name='%v'", name))
 	statement, err = DB.Prepare(query)
 	if err != nil {
+		log.Println("Error query: " + query)
 		return err
 	}
 	_, err = statement.Exec()
@@ -83,7 +103,7 @@ func RemoveVideo(name string) error {
 	return nil
 }
 
-func InsertVideo(vid transcoder.Vidinfo, name string, state string) error {
+func InsertVideo(vid vd.Vidinfo, name string, state string) error {
 	var (
 		err       error
 		query     string
@@ -92,7 +112,7 @@ func InsertVideo(vid transcoder.Vidinfo, name string, state string) error {
 	)
 
 	// Insert video track
-	query = getInsertQ(videovalues, "Video")
+	query = getInsertQuery(videovalues, "Video")
 	statement, err = DB.Prepare(query)
 	if err != nil {
 		log.Println("Error query: " + query)
@@ -116,10 +136,9 @@ func InsertVideo(vid transcoder.Vidinfo, name string, state string) error {
 	if err != nil {
 		return err
 	}
-	log.Println(id)
 
 	// Insert audio tracks
-	query = getInsertQ(audiovalues, "Audio")
+	query = getInsertQuery(audiovalues, "Audio")
 	statement, err = DB.Prepare(query)
 	if err != nil {
 		log.Println("Error query: " + query)
@@ -139,7 +158,7 @@ func InsertVideo(vid transcoder.Vidinfo, name string, state string) error {
 	}
 
 	// Insert subtitle tracks
-	query = getInsertQ(subvalues, "Subtitle")
+	query = getInsertQuery(subvalues, "Subtitle")
 	statement, err = DB.Prepare(query)
 	if err != nil {
 		log.Println("Error query: " + query)
@@ -159,11 +178,11 @@ func InsertVideo(vid transcoder.Vidinfo, name string, state string) error {
 	return nil
 }
 
-func getInsertQ(clmns []string, tname string) string {
+func getInsertQuery(clms []string, tname string) string {
 	query := fmt.Sprintf("INSERT INTO %v (", tname)
 	val := "("
-	for i, c := range clmns {
-		if i != len(clmns)-1 {
+	for i, c := range clms {
+		if i != len(clms)-1 {
 			query += fmt.Sprintf("%v,", c)
 			val += "?,"
 		} else {
@@ -177,15 +196,44 @@ func getInsertQ(clmns []string, tname string) string {
 	return query
 }
 
-// Not done
-func selectQ(clmns []string, tname string) (*sql.Rows, error) {
-	query := fmt.Sprintf("SELECT %v FROM %v", clmns, tname)
-	rows, err := DB.Query(query)
-	if err != nil {
-		return rows, err
+func getSelectQuery(clms []string, tname string, key string) string {
+	query := "SELECT "
+	if len(clms) > 0 {
+		for i, c := range clms {
+			if i != len(clms)-1 {
+				query += fmt.Sprintf("%v,", c)
+			} else {
+				query += fmt.Sprintf("%v ", c)
+			}
+		}
+	} else {
+		query += "* "
+	}
+	query += "FROM " + tname
+	if key != "" {
+		query += " WHERE " + key
 	}
 
-	return rows, nil
+	return query
+}
+
+func getDeleteQuery(tname string, key string) string {
+	query := fmt.Sprintf("DELETE FROM %v WHERE %v", tname, key)
+	return query
+}
+
+func getUpdateQuery(clms []string, tname string, key string) string {
+	query := fmt.Sprintf("UPDATE %v SET ", tname)
+	for i, c := range clms {
+		if i != len(clms)-1 {
+			query += fmt.Sprintf("%v,", c)
+		} else {
+			query += fmt.Sprintf("%v ", c)
+		}
+	}
+	query += "WHERE " + key
+
+	return query
 }
 
 func getVidId(name string) (int, error) {

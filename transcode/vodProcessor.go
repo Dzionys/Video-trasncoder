@@ -10,7 +10,9 @@ import (
 	"strings"
 	"sync"
 
+	db "../database"
 	"../lp"
+	vd "../videodata"
 	"github.com/BurntSushi/toml"
 )
 
@@ -96,7 +98,7 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 	return nil
 }
 
-func ProcessVodFile(source string, data Vidinfo, cldata Video) {
+func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video) {
 	lp.WLog("Starting VOD Processor..")
 	var (
 		err error
@@ -109,7 +111,7 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: failed to load config file")
-		removeFile("videos/" + source)
+		removeFile("videos/", source)
 		return
 	}
 
@@ -126,11 +128,11 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 		} else {
 			log.Println(err)
 			lp.WLog("Error: file may or may not exist")
-			removeFile(sfpath)
+			removeFile("videos/", source)
 			return
 		}
 	} else {
-		removeFile(sfpath)
+		removeFile("videos/", source)
 		return
 	}
 
@@ -139,7 +141,7 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: failed to get full file name")
-		removeFile(sfpath)
+		removeFile("videos/", source)
 		return
 	}
 
@@ -160,11 +162,11 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 	// Checks if transcoded file with the same name already exists
 	if _, err := os.Stat(tempfile); err == nil {
 		lp.WLog(fmt.Sprintf("Error: file \"%v\" already transcoding", sfnamewe+".mp4"))
-		removeFile(sfpath)
+		removeFile("videos/", source)
 		return
 	} else if _, err := os.Stat(destinationfile); err == nil {
 		lp.WLog(fmt.Sprintf("Error: file \"%v\" already exist in transcoded folder", sfnamewe+".mp4"))
-		removeFile(sfpath)
+		removeFile("videos/", source)
 		return
 	}
 
@@ -172,10 +174,10 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 
 	// If data is empty get video info
 	if data.IsEmpty() {
-		data, err = GetVidInfo(sfpath, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+		data, err = GetVidInfo(CONF.SD, source, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
 		if err != nil {
 			log.Println(err)
-			removeFile(sfpath)
+			removeFile("videos/", source)
 			return
 		}
 	}
@@ -198,6 +200,15 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 	} else {
 		dur = data.Videotrack[0].Duration
 	}
+
+	err = db.UpdateState(source, "Transcoding")
+	if err != nil {
+		lp.WLog("Error: failed to update state in database")
+		log.Println(err)
+		removeFile(CONF.SD, source)
+		return
+	}
+
 	wg.Add(1)
 	err = runCmdCommand(cmd, dur, &wg)
 	wg.Wait()
@@ -205,22 +216,37 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 		log.Println(err)
 		lp.WLog("Error: could not start trancoding")
 		log.Printf("Error cmd line: %v", cmd)
-		removeFile(sfpath)
+		removeFile("videos/", source)
 		return
 	} else if out, err := os.Stat(tempfile); os.IsNotExist(err) || out == nil {
 		log.Println(err)
 		lp.WLog("Error: transcoder failed")
 		log.Printf("Error cmd line: %v", cmd)
-		removeFile(sfpath)
+		removeFile("videos/", source)
 		return
 	} else {
 
 		// Removes source file and moves transcoded file to /videos/transcoded
-		os.Remove(sfpath)
+		removeFile(CONF.SD, source)
 		if _, err = os.Stat(CONF.DD); os.IsNotExist(err) {
 			os.Mkdir(CONF.DD, 0777)
 		}
 		os.Rename(tempfile, destinationfile)
+		dfn := sfnamewe + ".mp4"
+		ndata, err := GetVidInfo(CONF.DD, dfn, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+		if err != nil {
+			lp.WLog("Error: failed getting video data")
+			log.Println(err)
+			removeFile(CONF.DD, dfn)
+			return
+		}
+		err = db.InsertVideo(ndata, dfn, "Transcoded")
+		if err != nil {
+			lp.WLog("Error: failed to insert video data in database")
+			log.Println(err)
+			removeFile(CONF.DD, dfn)
+			return
+		}
 		os.Remove(tempfile)
 
 		msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(tempfile))
@@ -228,10 +254,11 @@ func ProcessVodFile(source string, data Vidinfo, cldata Video) {
 	}
 }
 
-func removeFile(filepath string) {
-	if os.Remove(filepath) != nil {
-		lp.WLog("Error: failed to remove source file")
+func removeFile(path string, filename string) {
+	if os.Remove(path+filename) != nil {
+		lp.WLog("Error: failed removing source file")
 	}
+	db.RemoveVideo(filename)
 	return
 }
 

@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"../lp"
+	vd "../videodata"
 )
 
 func GetMediaInfoJson(source string, wg *sync.WaitGroup) ([]byte, error) {
@@ -62,18 +63,18 @@ func generateDataFile(wg *sync.WaitGroup, gpath string) error {
 	return nil
 }
 
-func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string) (Vidinfo, error) {
+func GetVidInfo(path string, filename string, tempjson string, datagen string, tempdata string) (vd.Vidinfo, error) {
 	var (
 		wg sync.WaitGroup
-		vi Vidinfo
+		vi vd.Vidinfo
 	)
 
 	// Geting data about video
 	wg.Add(1)
-	infob, err := GetMediaInfoJson(sfpath, &wg)
+	infob, err := GetMediaInfoJson(path+filename, &wg)
 	if err != nil {
 		lp.WLog("Error: could not get json data from file")
-		removeFile(sfpath)
+		removeFile(path, filename)
 		return vi, err
 	}
 	wg.Wait()
@@ -84,13 +85,13 @@ func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string)
 	info, err := json.Marshal(raw)
 	if err != nil {
 		lp.WLog("Error: failed to marshal json file")
-		removeFile(sfpath)
+		removeFile(path, filename)
 		return vi, err
 	}
 	err = ioutil.WriteFile(tempjson, info, 0666)
 	if err != nil {
 		lp.WLog("Error: could not create json file")
-		removeFile(sfpath)
+		removeFile(path, filename)
 		return vi, err
 	}
 
@@ -102,7 +103,7 @@ func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string)
 	if err != nil {
 		log.Println(err)
 		lp.WLog("Error: failed to generate video data")
-		removeFile(sfpath)
+		removeFile(path, filename)
 		return vi, err
 	}
 
@@ -111,7 +112,7 @@ func GetVidInfo(sfpath string, tempjson string, datagen string, tempdata string)
 	if err != nil || vi.IsEmpty() {
 		log.Println(err)
 		lp.WLog("Error: failed parsing data file")
-		removeFile(sfpath)
+		removeFile(path, filename)
 		return vi, err
 	}
 
