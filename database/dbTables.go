@@ -9,6 +9,8 @@ type (
 		VideoTable    string
 		AudioTable    string
 		SubtitleTable string
+		PresetTable   string
+		PresetValues  [][]string
 	}
 )
 

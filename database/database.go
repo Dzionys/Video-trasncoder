@@ -4,17 +4,19 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 
 	vd "../videodata"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
-	DB          *sql.DB
-	tables      tableQueries
-	videovalues = []string{"Stream_Id", "Name", "State", "Video_Codec", "Width", "Height", "Frame_Rate"}
-	audiovalues = []string{"Stream_Id", "Channels", "Language", "Audio_Codec", "Video_Id"}
-	subvalues   = []string{"Stream_Id", "Language", "Video_Id"}
+	DB           *sql.DB
+	tables       tableQueries
+	videovalues  = []string{"Stream_Id", "Name", "State", "Video_Codec", "Width", "Height", "Frame_Rate"}
+	audiovalues  = []string{"Stream_Id", "Channels", "Language", "Audio_Codec", "Video_Id"}
+	subvalues    = []string{"Stream_Id", "Language", "Video_Id"}
+	presetvalues = []string{"Name", "Type", "Resolution", "Codec", "Bitrate"}
 )
 
 func OpenDatabase() error {
@@ -46,6 +48,16 @@ func OpenDatabase() error {
 		return err
 	}
 	err = prepareTable(tables.SubtitleTable)
+	if err != nil {
+		return err
+	}
+
+	// Recreate Preset table
+	err = runCustomQuery("DROP TABLE IF EXISTS Preset")
+	if err != nil {
+		return err
+	}
+	err = prepareTable(tables.PresetTable)
 	if err != nil {
 		return err
 	}
@@ -178,6 +190,27 @@ func InsertVideo(vid vd.Vidinfo, name string, state string) error {
 	return nil
 }
 
+func InsertPresets() error {
+	query := getInsertQuery(presetvalues, "Preset")
+
+	for _, v := range tables.PresetValues {
+		statement, err := DB.Prepare(query)
+		if err != nil {
+			return err
+		}
+		tp, err := strconv.Atoi(v[1])
+		if err != nil {
+			return err
+		}
+		_, err = statement.Exec(v[0], tp, v[2], v[3], v[4])
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func getInsertQuery(clms []string, tname string) string {
 	query := fmt.Sprintf("INSERT INTO %v (", tname)
 	val := "("
@@ -259,7 +292,23 @@ func prepareTable(table string) error {
 		log.Println(err)
 		return err
 	}
-	statement.Exec()
+	_, err = statement.Exec()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func runCustomQuery(query string) error {
+	statement, err := DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	_, err = statement.Exec()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

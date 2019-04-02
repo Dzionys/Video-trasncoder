@@ -229,6 +229,7 @@ func main() {
 	err = lp.OpenLogFile(CONF.LogP)
 	if err != nil {
 		log.Println("Error: failed open log file")
+		log.Panicln(err)
 		return
 	}
 	defer lp.LogFile.Close()
@@ -236,7 +237,14 @@ func main() {
 	//Open database
 	err = db.OpenDatabase()
 	if err != nil {
-		log.Println("Error: failed open database")
+		//log.Panicln(err)
+		return
+	}
+
+	err = db.InsertPresets()
+	if err != nil {
+		log.Println("Error: failed to insert presets to database")
+		log.Panicln(err)
 		return
 	}
 
