@@ -10,13 +10,13 @@ h1 {
   letter-spacing: 2px;
 }
 
-button {
+/* button {
   background-color: #172C64;
   width: 150px;
   height: 50px;
   color: #000;
   font-size: 120%;
-}
+} */
 
 div#main {
   color: white;
@@ -159,6 +159,11 @@ body,
 
 .transcode-form.uploaded {
   display: block;
+}
+
+#form-group-add {
+  max-height: 20vh;
+  overflow-y: scroll;
 }
 
 .form-group {

@@ -26,6 +26,8 @@ function SSE() {
 
 window.onload = SSE();
 
+var formGroupCount = 1;
+
 var inputFile = document.getElementById('input-file');
 var transcodeSubmit = document.getElementById('transcode-submit');
 var uploadForm = document.getElementById('upload-form');
@@ -38,6 +40,43 @@ var resolution = document.getElementById('resolution');
 var framerate = document.getElementById('frame-rate');
 var audioTracks = document.getElementById('audio-tracks');
 var subtitleTracks = document.getElementById('subtitle-tracks');
+var formGroup = document.getElementsByClassName('form-group')[0];
+var buttonAdd = document.getElementById('button-add');
+var add = document.getElementById('form-group-add');
+
+function addFormGroup(add, formGroup, i) {
+  let newFormGroup = formGroup.cloneNode(true);
+
+  let label = newFormGroup.getElementsByClassName('vidpre-label')[0];
+  let select = newFormGroup.getElementsByClassName('video-presets')[0];
+  label.id = `vidpre-label-${i}`;
+  select.id = `video-presets-${i}`;
+  label.setAttribute('for', `vidpre-${i}`);
+  select.setAttribute('name', `vidpre-${i}`);
+  
+  label = newFormGroup.getElementsByClassName('audpre-label')[0];
+  select = newFormGroup.getElementsByClassName('audio-presets')[0];
+  label.id = `audpre-label-${i}`;
+  select.id = `audio-presets-${i}`;
+  label.setAttribute('for', `audpre-${i}`);
+  select.setAttribute('name', `audpre-${i}`);
+
+  label = newFormGroup.getElementsByClassName('audioselect-label')[0];
+  select = newFormGroup.getElementsByClassName('audio-select')[0];
+  label.id = `audioselect-label-${i}`;
+  select.id = `audio-select-${i}`;
+  label.setAttribute('for', `audioselect-${i}`);
+  select.setAttribute('name', `audioselect-${i}`);
+
+  label = newFormGroup.getElementsByClassName('subselect-label')[0];
+  select = newFormGroup.getElementsByClassName('subtitle-select')[0];
+  label.id = `subselect-label-${i}`;
+  select.id = `subtitle-select-${i}`;
+  label.setAttribute('for', `subselect-${i}`);
+  select.setAttribute('name', `subselect-${i}`);
+
+  add.appendChild(newFormGroup);
+}
 
 function upload(event) {
   var file = event.target.files[0];
@@ -179,6 +218,12 @@ function transcode(event) {
 
   event.preventDefault();
 }
+
+buttonAdd.addEventListener('click', function(event) {
+  formGroupCount++;
+  addFormGroup(add, formGroup, formGroupCount);
+  event.preventDefault();
+});
 
 inputFile.addEventListener('change', upload);
 transcodeForm.addEventListener('submit', transcode);
