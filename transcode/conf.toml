@@ -32,7 +32,7 @@ LogP = "info.log"
 Advanced = true
 
 # If Advanced and Presets set to true use Presets
-Presets = false
+Presets = true
 
 # Available file formats to be uploaded
 FileTypes = [".mkv", ".mp4", ".avi", ".mov", ".mpg", ".wmv"]

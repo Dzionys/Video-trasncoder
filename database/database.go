@@ -305,7 +305,7 @@ func GetPreset(name string) (vd.Preset, error) {
 		"Bitrate",
 	}
 
-	query = getSelectQuery(clms, "Preset", "Name="+name)
+	query = getSelectQuery(clms, "Preset", fmt.Sprintf("Name='%v'", name))
 	rows, err = DB.Query(query)
 	if err != nil {
 		return prst, err

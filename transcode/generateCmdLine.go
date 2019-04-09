@@ -18,14 +18,16 @@ var prRes = map[string]string{
 	"1080p": "1920x1080",
 }
 
-func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname string, df string) (string, error) {
+func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname string, dfwe string) (string, error) {
 	var (
 		cmd       = ""
-		mapping   = ""
-		vcode     = ""
-		acode     = ""
-		scode     = ""
+		mapping   []string
+		vcode     []string
+		acode     []string
+		scode     []string
+		fc        = ""
 		debugIntr = ""
+		dfs       []string
 	)
 
 	// Checks if debuging is set to true
@@ -33,9 +35,29 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 		debugIntr += "-ss " + CONF.DebugStart + " -t " + CONF.DebugEnd
 	}
 
-	for _, s := range prdata.Streams {
+	// Video part ---------------------------------------------
 
-		// Video part ---------------------------------------------
+	if vdata.Videotrack[0].FrameRate < 25 {
+		var (
+			maps string
+			vo   string
+			ao   string
+		)
+		fc = "-r 25 -filter_complex [0:v]setpts=%[1]v/25*PTS[v];[0:a]atempo=25/%[1]v[a];[v]split=%[2]v%[3]v;[a]asplit=%[2]v%[4]v%[5]v"
+
+		for i, _ := range prdata.Streams {
+			maps += fmt.Sprintf(" -map [vo%[1]v] -map [ao%[1]v]", i)
+			vo += fmt.Sprintf("[vo%v]", i)
+			ao += fmt.Sprintf("[ao%v]", i)
+		}
+
+		fc = fmt.Sprintf(fc, vdata.Videotrack[0].FrameRate, len(prdata.Streams), vo, ao, maps)
+	}
+
+	cmd = fmt.Sprintf("ffmpeg -i %v %v %v", sf, debugIntr, fc)
+
+	println(len(prdata.Streams))
+	for i, s := range prdata.Streams {
 
 		vidpr, err := db.GetPreset(s.VidPreset)
 		if err != nil {
@@ -47,35 +69,64 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 		}
 
 		svtres := strconv.Itoa(vdata.Videotrack[0].Width) + "x" + strconv.Itoa(vdata.Videotrack[0].Height)
+		println(prRes[vidpr.Resolution] != svtres)
 		if prRes[vidpr.Resolution] != svtres {
-			vcode += fmt.Sprintf("-s %v", prRes[vidpr.Resolution])
+			vcode = append(vcode, fmt.Sprintf(" -s %v", prRes[vidpr.Resolution]))
 		}
 
 		if vidpr.Codec != vdata.Videotrack[0].CodecName {
 			switch vidpr.Codec {
 
 			case "h264":
-				vcode += fmt.Sprintf(" -c:v:%[1]v libx264 -b:v:%[1]v %[2]vk -metadata:s:v:%[1]v name=\"%[3]v\"", s.VtId, vidpr.Bitrate, sfname)
+				vcode = append(vcode, fmt.Sprintf(" -c:v:%[1]v libx264 -b:v:%[1]v %[2]vk -metadata:s:v:%[1]v name=\"%[3]v\"", s.VtId, vidpr.Bitrate, sfname))
 				break
 
 			case "hevc":
 				templ := fmt.Sprintf(" -c:v:%v libx265 -x265-params \"preset=slower:me=hex:no-rect=1:no-amp=1:rd=4:aq-mode=2:", s.VtId)
 				templ += "aq-strength=0.5:psy-rd=1.0:psy-rdoq=0.2:bframes=3:min-keyint=1\" "
 				templ += fmt.Sprintf("-b:v:0 %vk -metadata:s:v:0 name=\"%v\"", vidpr.Bitrate, sfname)
-				vcode += templ
+				vcode = append(vcode, templ)
 			}
+		} else {
+			vcode = append(vcode, fmt.Sprintf(" -c:v:%[1]v copy -metadata:s:v:%[1]v name=\"%[2]v\"", s.VtId, sfname))
 		}
 
-		for i, at := range s.AudioT {
-			if !(vdata.Videotrack[0].FrameRate < 25) {
-				mapping += fmt.Sprintf(" -map 0:%v", at.AtId)
-			}
-			acode += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, audpr.Bitrate, at.Lang)
+		if !(vdata.Videotrack[0].FrameRate < 25) {
+			mapping = append(mapping, fmt.Sprintf(" -map 0:%v", s.VtId))
+		} else {
+			mapping = append(mapping, "")
 		}
 
-		for _, st := range s.SubtitleT {
-			scode += fmt.Sprintf(" -c:s:%[1]v copy -metadata:s:s:%[1]v language=%[2]v", st.StId, st.Lang)
+		// Audio part ---------------------------------------------
+
+		if len(s.AudioT) < i+1 {
+			for i, at := range s.AudioT {
+				if !(vdata.Videotrack[0].FrameRate < 25) {
+					mapping = append(mapping, fmt.Sprintf(" -map 0:%v", at.AtId))
+				}
+				acode = append(acode, fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, audpr.Bitrate, at.Lang))
+			}
+		} else {
+			acode = append(acode, "")
 		}
+
+		// Subtitle part ------------------------------------------
+
+		if len(s.SubtitleT) > i+1 {
+			for _, st := range s.SubtitleT {
+				scode = append(scode, fmt.Sprintf(" -c:s:%[1]v copy -metadata:s:s:%[1]v language=%[2]v", st.StId, st.Lang))
+			}
+		} else {
+			scode = append(scode, "")
+		}
+
+		// Creates output file names
+		dfpat := "%v-%v-%v-%v%v"
+		dfs = append(dfs, fmt.Sprintf(dfpat, dfwe, vidpr.Resolution, vidpr.Codec, audpr.Codec, ".mp4"))
+
+		// Create cmd line
+		tcmd := "%v %v %v %v -async 1 -vsync 1 %v"
+		cmd += fmt.Sprintf(tcmd, vcode[i], acode[i], scode[i], mapping[i], dfs[i])
 
 	}
 

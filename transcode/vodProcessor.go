@@ -189,8 +189,11 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 	// Generate command line
 	if CONF.Advanced {
 		if CONF.Presets {
-			cmd, err = generatePresetCmdLine(prdata, data, sfpath, fullsfname, tempfile)
+			cmd, err = generatePresetCmdLine(prdata, data, sfpath, fullsfname, fmt.Sprintf("%v%v", CONF.TD, sfnamewe))
 			if err != nil {
+				lp.WLog("Error: failed to generate cmd line")
+				log.Println(err)
+				removeFile("videos/", source)
 				return
 			}
 		} else {
@@ -201,6 +204,7 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 	}
 
 	println(cmd)
+	return
 
 	// Run generated command line
 	lp.WLog("Starting to transcode")

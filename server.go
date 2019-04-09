@@ -45,12 +45,12 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		//Starts readig file by chuncking
 		r.ParseMultipartForm(32 << 20)
 		file, handler, err := r.FormFile("file")
-		defer file.Close()
 		if err != nil {
 			log.Println(err)
 			lp.WLog("Error: failed to upload file")
 			return
 		}
+		defer file.Close()
 
 		// Check if video file format is allowed
 		allowed := false

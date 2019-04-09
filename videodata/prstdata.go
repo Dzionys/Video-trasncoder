@@ -6,7 +6,7 @@ type (
 		Streams  []Streams
 	}
 	Streams struct {
-		VtId      string
+		VtId      int
 		VidPreset string
 		AudPreset string
 		AudioT    []AudT
