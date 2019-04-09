@@ -162,6 +162,7 @@ function transcode(event) {
     var e = document.getElementById(`video-presets-${j}`);
     if (e.options[e.selectedIndex].value != "nochange"){
       strpat['VidPreset'] = e.options[e.selectedIndex].value;
+      console.log(strpat['VidPreset'])
     }
 
     // Audio preset
@@ -214,7 +215,7 @@ function transcode(event) {
   // Send client data to server
   axios.post('/transcode', data)
     .then(function (response) {
-      localStorage.removeItem('cldata');
+      localStorage.removeItem('streampattern');
       localStorage.removeItem('video');
       transcodeForm.className = 'transcode-form';
     })

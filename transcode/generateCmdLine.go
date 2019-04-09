@@ -69,7 +69,6 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 		}
 
 		svtres := strconv.Itoa(vdata.Videotrack[0].Width) + "x" + strconv.Itoa(vdata.Videotrack[0].Height)
-		println(prRes[vidpr.Resolution] != svtres)
 		if prRes[vidpr.Resolution] != svtres {
 			vcode = append(vcode, fmt.Sprintf(" -s %v", prRes[vidpr.Resolution]))
 		}
