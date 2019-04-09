@@ -157,11 +157,11 @@ function transcode(event) {
 
   for (var j = 1; j <= formGroupCount; j++) {
     var strpat = JSON.parse(localStorage.getItem('streampattern'));
+
     // Video preset
     var e = document.getElementById(`video-presets-${j}`);
     if (e.options[e.selectedIndex].value != "nochange"){
       strpat['VidPreset'] = e.options[e.selectedIndex].value;
-      console.log(strpat['VidPreset'])
     }
 
     // Audio preset
@@ -169,7 +169,6 @@ function transcode(event) {
     if (e.options[e.selectedIndex].value != "nochange"){
       strpat['AudPreset'] = e.options[e.selectedIndex].value;
     }
-    
 
     // Audio tracks
     e = document.getElementById(`audio-select-${j}`);
