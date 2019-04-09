@@ -140,6 +140,7 @@ function upload(event) {
       }
 
       localStorage.removeItem('filename');
+      localStorage.setItem('video', JSON.stringify(response.data));
       localStorage.setItem('streampattern', JSON.stringify(streampattern));
     
     })
@@ -155,10 +156,10 @@ function transcode(event) {
     "Streams": []
   }
 
+  var video = JSON.parse(localStorage.getItem('video'));
   var strpat = JSON.parse(localStorage.getItem('streampattern'));
 
   for (var j = 1; j < formGroupCount; j++) {
-    //var fg = document.getElementsByClassName('form-group')[j];
 
     // Video preset
     var e = document.getElementById(`video-presets-${j}`);
@@ -175,15 +176,18 @@ function transcode(event) {
     // Audio tracks
     e = document.getElementById(`audio-select-${j}`);
     var audioindex = e.options[e.selectedIndex].value;
+    var atindex = video.audiotrack.findIndex(item => item.index == audioindex);
     if (audioindex != "null" && audioindex != "keep") {
       var audio = {
-        "AtId": parseInt(audioindex)
+        "AtId": parseInt(audioindex),
+        "Lang": video['audiotrack'][atindex]['language']
       };
       strpat['AudioT'].push(audio)
 
     } else if (audioindex == "keep") {
       var audio = {
-        "AtId": -1
+        "AtId": -1,
+        "Lang": video['audiotrack'][atindex]['language']
       };
       strpat['AudioT'].push(audio)
     }
@@ -191,15 +195,18 @@ function transcode(event) {
     // Subtitle tracks
     e = document.getElementById(`subtitle-select-${j}`);
     var subindex = e.options[e.selectedIndex].value;
+    var stindex = video.subtitle.findIndex(item => item.index == subindex);
     if (subindex != "null" && subindex != "keep") {
       var sub = {
-        "StId": parseInt(subindex)
+        "StId": parseInt(subindex),
+        "Lang": video['subtitle'][stindex]['Language']
       };
       strpat['SubtitleT'].push(sub)
 
     } else if (subindex == "keep") {
       var sub = {
-        "StId": -1
+        "StId": -1,
+        "Lang": video['subtitle'][stindex]['Language']
       };
       strpat['SubtitleT'].push(sub)
     }
@@ -211,6 +218,7 @@ function transcode(event) {
   axios.post('/transcode', data)
     .then(function (response) {
       localStorage.removeItem('cldata');
+      localStorage.removeItem('video');
       transcodeForm.className = 'transcode-form';
     })
     .catch(function (error) {

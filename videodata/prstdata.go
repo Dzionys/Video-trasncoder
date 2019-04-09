@@ -10,13 +10,15 @@ type (
 		VidPreset string
 		AudPreset string
 		AudioT    []AudT
-		subtitleT []SubT
+		SubtitleT []SubT
 	}
 	AudT struct {
 		AtId int
+		Lang string
 	}
 	SubT struct {
-		AtId int
+		StId int
+		Lang string
 	}
 )
 
