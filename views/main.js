@@ -45,10 +45,10 @@ var buttonAdd = document.getElementById('button-add');
 var add = document.getElementById('form-group-add');
 
 function addFormGroup(add, formGroup, i) {
-  let newFormGroup = formGroup.cloneNode(true);
+  var newFormGroup = formGroup.cloneNode(true);
 
-  let label = newFormGroup.getElementsByClassName('vidpre-label')[0];
-  let select = newFormGroup.getElementsByClassName('video-presets')[0];
+  var label = newFormGroup.getElementsByClassName('vidpre-label')[0];
+  var select = newFormGroup.getElementsByClassName('video-presets')[0];
   label.id = `vidpre-label-${i}`;
   select.id = `video-presets-${i}`;
   label.setAttribute('for', `vidpre-${i}`);
@@ -154,10 +154,9 @@ function transcode(event) {
   }
 
   var video = JSON.parse(localStorage.getItem('video'));
-  var strpat = JSON.parse(localStorage.getItem('streampattern'));
 
   for (var j = 1; j <= formGroupCount; j++) {
-
+    var strpat = JSON.parse(localStorage.getItem('streampattern'));
     // Video preset
     var e = document.getElementById(`video-presets-${j}`);
     if (e.options[e.selectedIndex].value != "nochange"){
@@ -170,6 +169,7 @@ function transcode(event) {
     if (e.options[e.selectedIndex].value != "nochange"){
       strpat['AudPreset'] = e.options[e.selectedIndex].value;
     }
+    
 
     // Audio tracks
     e = document.getElementById(`audio-select-${j}`);
