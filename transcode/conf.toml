@@ -31,5 +31,8 @@ LogP = "info.log"
 # If true using advanced transcoder based on client choices
 Advanced = true
 
+# If Advanced and Presets set to true use Presets
+Presets = false
+
 # Available file formats to be uploaded
 FileTypes = [".mkv", ".mp4", ".avi", ".mov", ".mpg", ".wmv"]

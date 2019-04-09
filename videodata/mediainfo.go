@@ -36,6 +36,25 @@ type Vidinfo struct {
 	Subtitle    []subtitle   `json:"subtitle "`
 }
 
+type Data struct {
+	Vidinfo    Vidinfo
+	Vidpresets []Videopresets
+	Audpresets []Audiopresets
+}
+
+type Videopresets struct {
+	Name       string
+	Resolution string
+	Codec      string
+	Bitrate    int
+}
+
+type Audiopresets struct {
+	Name    string
+	Codec   string
+	Bitrate int
+}
+
 func (s Vidinfo) IsEmpty() bool {
 	return reflect.DeepEqual(s, Vidinfo{})
 }

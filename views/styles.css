@@ -18,6 +18,13 @@ h1 {
   font-size: 120%;
 } */
 
+div#formgroup {
+  background-color: #232b33;
+  padding: 0.2rem;
+  border-radius: 3px;
+  color: white;
+}
+
 div#main {
   color: white;
   width: 40rem;

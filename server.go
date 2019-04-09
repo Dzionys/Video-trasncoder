@@ -13,7 +13,7 @@ import (
 
 	db "./database"
 	"./lp"
-	transcoder "./transcode"
+	tc "./transcode"
 	vd "./videodata"
 	"github.com/BurntSushi/toml"
 )
@@ -21,9 +21,10 @@ import (
 var (
 	uploadtemplate = template.Must(template.ParseGlob("upload.html"))
 	vf             vd.Video
+	prd            vd.PData
 	wg             sync.WaitGroup
 	crGot          = 0
-	CONF           transcoder.Config
+	CONF           tc.Config
 )
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +110,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		if CONF.Advanced {
 			go waitForClientData(handler.Filename, data)
 		} else {
-			go transcoder.ProcessVodFile(handler.Filename, data, vf)
+			go tc.ProcessVodFile(handler.Filename, data, vf, prd)
 			resetData()
 		}
 	default:
@@ -124,7 +125,7 @@ func waitForClientData(filename string, data vd.Vidinfo) {
 			lp.WLog("Information received")
 
 			// Strart transcoding if data is received
-			transcoder.ProcessVodFile(filename, data, vf)
+			tc.ProcessVodFile(filename, data, vf, prd)
 			resetData()
 			break
 		} else if crGot == 2 {
@@ -137,25 +138,37 @@ func waitForClientData(filename string, data vd.Vidinfo) {
 
 // Send json response after file upload
 func writeJsonResponse(w http.ResponseWriter, filename string) (vd.Vidinfo, error) {
+	var (
+		data    vd.Data
+		vidinfo vd.Vidinfo
+		err     error
+	)
 
-	data, err := transcoder.GetVidInfo("./videos/", filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+	vidinfo, err = tc.GetVidInfo("./videos/", filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
 	if err != nil {
 		log.Println(err)
-		return data, err
+		return vidinfo, err
 	}
+
+	data, err = db.AddPresetsToJson(vidinfo)
+	if err != nil {
+		return vidinfo, err
+	}
+
 	info, err := json.Marshal(data)
 	if err != nil {
 		log.Println(err)
-		return data, err
+		return vidinfo, err
 	}
+
 	w.WriteHeader(200)
 	w.Write(info)
 
-	return data, nil
+	return vidinfo, nil
 }
 
-func upConf() (transcoder.Config, error) {
-	var conf transcoder.Config
+func upConf() (tc.Config, error) {
+	var conf tc.Config
 	if _, err := toml.DecodeFile("transcode/conf.toml", &conf); err != nil {
 		log.Println("error geting conf.toml: ", err)
 		return conf, err
@@ -178,7 +191,7 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Decode json file
 	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&vf)
+	err := decoder.Decode(&prd)
 	if err != nil {
 		crGot = 2
 		log.Println(err)
@@ -201,6 +214,7 @@ func removeFile(path string, filename string) {
 func resetData() {
 	crGot = 0
 	vf = vd.Video{}
+	prd = vd.PData{}
 }
 
 func main() {

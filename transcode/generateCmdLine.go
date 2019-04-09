@@ -5,11 +5,57 @@ import (
 	"strconv"
 	"strings"
 
+	db "../database"
 	"../lp"
 	vd "../videodata"
 )
 
-// Needs more testing !!!
+var prRes = map[string]string{
+	"240p":  "352:240",
+	"576p":  "720:576",
+	"720p":  "1280:720",
+	"360p":  "480:360",
+	"1080p": "1920:1080",
+}
+
+func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname string, df string) (string, error) {
+	var (
+		cmd = ""
+		// mapping   = ""
+		// vcode     = ""
+		// acode     = ""
+		// scode     = ""
+		// debugIntr = ""
+	)
+
+	// Checks if debuging is set to true
+	// if CONF.Debug {
+	// 	debugIntr = "-ss " + CONF.DebugStart + " -t " + CONF.DebugEnd
+	// }
+
+	for _, s := range prdata.Streams {
+
+		// Video part ---------------------------------------------
+
+		vidpr, err := db.GetPreset(s.VidPreset)
+		if err != nil {
+			return cmd, err
+		}
+		// audpr, err := db.GetPreset(s.AudPreset)
+		// if err != nil {
+		// 	return cmd, err
+		// }
+
+		svtres := strconv.Itoa(vdata.Videotrack[0].Width) + ":" + strconv.Itoa(vdata.Videotrack[0].Height)
+		if prRes[vidpr.Resolution] != svtres {
+
+		}
+
+	}
+
+	return cmd, nil
+}
+
 func generateClientCmdLine(crdata vd.Video, vdata vd.Vidinfo, sf string, sfname string, df string) (string, error) {
 	var (
 		cmd       = ""

@@ -14,5 +14,6 @@ type Config struct {
 	DataGen    string
 	LogP       string
 	Advanced   bool
+	Presets    bool
 	FileTypes  []string
 }

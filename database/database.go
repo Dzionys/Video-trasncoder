@@ -11,12 +11,36 @@ import (
 )
 
 var (
-	DB           *sql.DB
-	tables       tableQueries
-	videovalues  = []string{"Stream_Id", "Name", "State", "Video_Codec", "Width", "Height", "Frame_Rate"}
-	audiovalues  = []string{"Stream_Id", "Channels", "Language", "Audio_Codec", "Video_Id"}
-	subvalues    = []string{"Stream_Id", "Language", "Video_Id"}
-	presetvalues = []string{"Name", "Type", "Resolution", "Codec", "Bitrate"}
+	DB          *sql.DB
+	tables      tableQueries
+	videovalues = []string{
+		"Stream_Id",
+		"Name",
+		"State",
+		"Video_Codec",
+		"Width",
+		"Height",
+		"Frame_Rate",
+	}
+	audiovalues = []string{
+		"Stream_Id",
+		"Channels",
+		"Language",
+		"Audio_Codec",
+		"Video_Id",
+	}
+	subvalues = []string{
+		"Stream_Id",
+		"Language",
+		"Video_Id",
+	}
+	presetvalues = []string{
+		"Name",
+		"Type",
+		"Resolution",
+		"Codec",
+		"Bitrate",
+	}
 )
 
 func OpenDatabase() error {
@@ -209,6 +233,89 @@ func InsertPresets() error {
 	}
 
 	return nil
+}
+
+func AddPresetsToJson(vid vd.Vidinfo) (vd.Data, error) {
+	var (
+		data  vd.Data
+		query string
+		err   error
+		rows  *sql.Rows
+	)
+	var (
+		name       string
+		resolution string
+		codec      string
+		bitrate    int
+	)
+
+	clms := []string{
+		"Name",
+		"Resolution",
+		"Codec",
+		"Bitrate",
+	}
+
+	query = getSelectQuery(clms, "Preset", "Type=0")
+	rows, err = DB.Query(query)
+	if err != nil {
+		return data, err
+	}
+	for rows.Next() {
+		rows.Scan(&name, &resolution, &codec, &bitrate)
+		temp := vd.Videopresets{
+			name,
+			resolution,
+			codec,
+			bitrate,
+		}
+		data.Vidpresets = append(data.Vidpresets, temp)
+	}
+
+	query = getSelectQuery(clms, "Preset", "Type=1")
+	rows, err = DB.Query(query)
+	if err != nil {
+		return data, err
+	}
+	for rows.Next() {
+		rows.Scan(&name, &resolution, &codec, &bitrate)
+		temp := vd.Audiopresets{
+			name,
+			codec,
+			bitrate,
+		}
+		data.Audpresets = append(data.Audpresets, temp)
+	}
+	data.Vidinfo = vid
+
+	return data, nil
+}
+
+func GetPreset(name string) (vd.Preset, error) {
+	var (
+		prst  vd.Preset
+		query string
+		err   error
+		rows  *sql.Rows
+	)
+
+	clms := []string{
+		"Resolution",
+		"Codec",
+		"Bitrate",
+	}
+
+	query = getSelectQuery(clms, "Preset", "Name="+name)
+	rows, err = DB.Query(query)
+	if err != nil {
+		return prst, err
+	}
+
+	for rows.Next() {
+		rows.Scan(&prst.Resolution, &prst.Codec, &prst.Bitrate)
+	}
+
+	return prst, nil
 }
 
 func getInsertQuery(clms []string, tname string) string {

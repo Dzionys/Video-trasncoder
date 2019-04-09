@@ -19,34 +19,32 @@
           </label>
         </form>
         <form method="post" id="transcode" class="transcode-form">
-          <h4>File: <span id="filename"></span>, <span id="resolution"></span>, <span id="codec"></span>, <span id="frame-rate"></span></h2>
+          <h4>File: <span id="filename"></span><span id="resolution"></span><span id="codec"></span><span id="frame-rate"></span></h4>
           <div id="form-group-add">
-            <div class="form-group">
+            <div class="form-group" id="formgroup">
               <span>
                 <label for="vidpre-1" class="vidpre-label">Video presets</label>
-                <select name="vidpre-1" class="video-presets">
+                <select name="vidpre-1" class="video-presets" id="video-presets-1">
                     <option selected value="nochange">None</option>
                 </select>
               </span>
 
               <span>
                 <label for="audpre-1" class="audpre-label">Audio presets</label>
-                <select name="audpre-1" class="audio-presets">
+                <select name="audpre-1" class="audio-presets" id="audio-presets-1">
                     <option selected value="nochange">None</option>
                 </select>
               </span>
 
               <span>
                 <label for="audioselect-1" class="audioselect-label">Audio Tracks</label>
-                <select name="audioselect-1" class="audio-select">
-                    <option selected value="nochange">None</option>
+                <select name="audioselect-1" class="audio-select" id="audio-select-1">
                 </select>
               </span>
 
               <span>
                 <label for="subselect-1" class="subselect-label">Subtitles</label>
-                <select name="subselect-1" class="subtitle-select">
-                    <option selected value="nochange">None</option>
+                <select name="subselect-1" class="subtitle-select" id="subtitle-select-1">
                 </select>
               </span>
             </div>

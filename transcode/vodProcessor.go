@@ -98,7 +98,7 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 	return nil
 }
 
-func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video) {
+func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.PData) {
 	lp.WLog("Starting VOD Processor..")
 	var (
 		err error
@@ -188,10 +188,19 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video) {
 
 	// Generate command line
 	if CONF.Advanced {
-		cmd, _ = generateClientCmdLine(cldata, data, sfpath, fullsfname, tempfile)
+		if CONF.Presets {
+			cmd, err = generatePresetCmdLine(prdata, data, sfpath, fullsfname, tempfile)
+			if err != nil {
+				return
+			}
+		} else {
+			cmd, _ = generateClientCmdLine(cldata, data, sfpath, fullsfname, tempfile)
+		}
 	} else {
 		cmd = generateBaseCmdLine(data, sfpath, tempfile, fullsfname)
 	}
+
+	println(cmd)
 
 	// Run generated command line
 	lp.WLog("Starting to transcode")

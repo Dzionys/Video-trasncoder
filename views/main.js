@@ -10,7 +10,7 @@ function SSE() {
     if (!event.data.startsWith('<')) {
       logg += '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br>';
       localStorage.setItem('filename', event.data)
-      document.getElementById('filename').innerText = event.data;
+      document.getElementById('filename').innerText = `${event.data}, `;
     } else if (event.data.indexOf('Error') > -1) {
       logg += '<span class="error">' + event.data + '</span><br>';
     } else if (/^[\s\S]*<br>.*?Progress:.*?<br>$/.test(logg) && event.data.includes('Progress:')) {
@@ -93,40 +93,54 @@ function upload(event) {
       uploadFormLabel.className = 'upload-form-label uploaded';
       transcodeForm.className = 'transcode-form uploaded';
       uploadFormInput.disabled = true;
-      resolution.innerText = `${response.data['videotrack'][0]['width']}x${response.data['videotrack'][0]['height']}`;
-      codec.innerText = response.data['videotrack'][0]['codecName'];
-      framerate.innerText = `${response.data['videotrack'][0]['frameRate']}fps`;
+      resolution.innerText = `${response.data['Vidinfo']['videotrack'][0]['width']}x${response.data['Vidinfo']['videotrack'][0]['height']}, `;
+      codec.innerText = `${response.data['Vidinfo']['videotrack'][0]['codecName']}, `;
+      framerate.innerText = `${response.data['Vidinfo']['videotrack'][0]['frameRate']}fps`;
 
-      if (!response.data.audiotracks == 0){
-        response.data.audiotrack.map(function (value) {
-          audioTracks.innerHTML += `<option selected value="${value.index}">${value.index}, ${value.language}, ${value.channels}ch</option>`
-        })
-      } else {
-        audioTracks.innerHTML += `<option selected value="null">no tracks</option>`
+      //localStorage.setItem('vidpresets', JSON.stringify(response.data['Vidpresets']));
+      //localStorage.setItem('audpresets', JSON.stringify(response.data['Audpresets']));
+      
+      var vdpr = document.getElementsByClassName('video-presets')[0];
+      for (var vp in response.data['Vidpresets']) {
+        vdpr.innerHTML += `<option value="${response.data['Vidpresets'][vp]['Name']}">${response.data['Vidpresets'][vp]['Name']}</option>`
       }
 
-      if (!response.data.subtitles == 0){
-        response.data.subtitle.map(function (value) {
-          subtitleTracks.innerHTML += `<option selected value="${value.index}">${value.index}, ${value.language}</option>`
-        })
-      } else {
-        subtitleTracks.innerHTML += `<option selected value="null">no tracks</option>`
+      var adpr = document.getElementsByClassName('audio-presets')[0];
+      for (var ap in response.data['Audpresets']) {
+        adpr.innerHTML += `<option value="${response.data['Audpresets'][ap]['Name']}">${response.data['Audpresets'][ap]['Name']}</option>`
       }
 
-      // Client data json pattern
-      var data = {
-        "FileName": localStorage.getItem('filename'),
-        "VtId": response.data['videotrack'][0]['Index'],
-        "VtCodec": "",
-        "FrameRate": 0.0,
-        "VtRes": "",
+      var adsl = document.getElementsByClassName('audio-select')[0];
+      adsl.innerHTML += `<option selected value="keep">keep all</option>`
+      if (!response.data['Vidinfo']['audiotracks'] == 0){
+        for (var j = 0; j < response.data['Vidinfo']['audiotracks']; j++) {
+          adsl.innerHTML += `<option value="${response.data['Vidinfo']['audiotrack'][j]['index']}">${response.data['Vidinfo']['audiotrack'][j]['language']}</option>`
+        }
+      } else {
+        adsl.innerHTML += `<option selected value="null">no tracks</option>`
+      }
+
+      var stsl = document.getElementsByClassName('subtitle-select')[0];
+      stsl.innerHTML += `<option selected value="keep">keep all</option>`
+      if (!response.data['Vidinfo']['subtitles'] == 0){
+        for (var j = 0; j < response.data['Vidinfo']['subtitles']; j++) {
+          stsl.innerHTML += `<option value="${response.data['Vidinfo']['subtitle'][j]['index']}">${response.data['Vidinfo']['subtitle'][j]['language']}</option>`
+        }
+      } else {
+        stsl.innerHTML += `<option selected value="null">no tracks</option>`
+      }
+
+      // Client data json patter
+      var streampattern = {
+        "VtId": response.data['Vidinfo']['videotrack'][0]['Index'],
+        "VidPreset": "",
+        "AudPreset": "",
         "AudioT": [],
         "SubtitleT": []
-      };
+      }
 
       localStorage.removeItem('filename');
-      localStorage.setItem('video', JSON.stringify(response.data));
-      localStorage.setItem('cldata', JSON.stringify(data));
+      localStorage.setItem('streampattern', JSON.stringify(streampattern));
     
     })
     .catch(function (error) {
@@ -136,79 +150,67 @@ function upload(event) {
 }
 
 function transcode(event) {
-  var video = JSON.parse(localStorage.getItem('video'));
-  var data = JSON.parse(localStorage.getItem('cldata'));
-
-  // Video codec
-  var e = document.getElementById('codec-select');
-  if (e.options[e.selectedIndex].value != "nochange") {
-  data['VtCodec'] = e.options[e.selectedIndex].value;
-  } else {
-    data['VtCodec'] = video['videotrack'][0]['codecName'];
+  var data = {
+    "FileName": localStorage.getItem('filename'),
+    "Streams": []
   }
 
-  // Video resolution
-  e = document.getElementById('resolution-select');
-  if (e.options[e.selectedIndex].value != "nochange") {
-    data['VtRes'] = e.options[e.selectedIndex].value;
-  } else {
-    data['VtRes'] = `${video['videotrack'][0]['width']}:${video['videotrack'][0]['height']}`;
-  }
+  var strpat = JSON.parse(localStorage.getItem('streampattern'));
 
-  // Video frame rate
-  e = document.getElementById('fr-select');
-  if (e.options[e.selectedIndex].value != "nochange") {
-    data['FrameRate'] = parseFloat(e.options[e.selectedIndex].value);
-  } else {
-    data['FrameRate'] = video['videotrack'][0]['frameRate'];
-  }
+  for (var j = 1; j < formGroupCount; j++) {
+    //var fg = document.getElementsByClassName('form-group')[j];
 
-  // Audio tracks
-  e = document.getElementById('audio-tracks');
-  var audioindex = e.options[e.selectedIndex].value;
-  if (audioindex != "null") {
-    var audiocodec = "";
-    var chann = 0;
-    var e2 = document.getElementById('audio-select');
-    var e3 = document.getElementById('channels-select');
-    var atindex = video.audiotrack.findIndex(item => item.index == audioindex);
-
-    if (e2.options[e2.selectedIndex].value != "nochange") {
-      audiocodec = e.options[e.selectedIndex].value;
-    } else {
-      audiocodec = video['audiotrack'][atindex]['codecName'];
+    // Video preset
+    var e = document.getElementById(`video-presets-${j}`);
+    if (e.options[e.selectedIndex].value != "nochange"){
+      strpat['VidPreset'] = e.options[e.selectedIndex].value;
     }
-    if (e3.options[e3.selectedIndex].value != "nochange") {
-      chann = e3.options[e3.selectedIndex].value;
-    } else {
-      chann = video['audiotrack'][atindex]['channels'];
-    }
-    var audio = {
-      "AtId": parseInt(audioindex),
-      "AtCodec": audiocodec,
-      "Language": video['audiotrack'][atindex]['language'],
-      "Channels": parseInt(chann)
-    };
-    data['AudioT'].push(audio)
-  }
 
-  // Subtitle tracks
-  e = document.getElementById('subtitle-tracks');
-  var subindex = e.options[e.selectedIndex].value;
-  if (subindex != "null") {
-    var stindex = video.subtitle.findIndex(item => item.index == subindex);
-    var sub = {
-      "StId": parseInt(subindex),
-      "Language": video['subtitle'][stindex]['Language']
-    };
-    data['SubtitleT'].push(sub)
+    // Audio preset
+    e = document.getElementById(`audio-presets-${j}`);
+    if (e.options[e.selectedIndex].value != "nochange"){
+      strpat['AudPreset'] = e.options[e.selectedIndex].value;
+    }
+
+    // Audio tracks
+    e = document.getElementById(`audio-select-${j}`);
+    var audioindex = e.options[e.selectedIndex].value;
+    if (audioindex != "null" && audioindex != "keep") {
+      var audio = {
+        "AtId": parseInt(audioindex)
+      };
+      strpat['AudioT'].push(audio)
+
+    } else if (audioindex == "keep") {
+      var audio = {
+        "AtId": -1
+      };
+      strpat['AudioT'].push(audio)
+    }
+
+    // Subtitle tracks
+    e = document.getElementById(`subtitle-select-${j}`);
+    var subindex = e.options[e.selectedIndex].value;
+    if (subindex != "null" && subindex != "keep") {
+      var sub = {
+        "StId": parseInt(subindex)
+      };
+      strpat['SubtitleT'].push(sub)
+
+    } else if (subindex == "keep") {
+      var sub = {
+        "StId": -1
+      };
+      strpat['SubtitleT'].push(sub)
+    }
+
+    data['Streams'].push(strpat)
   }
 
   // Send client data to server
   axios.post('/transcode', data)
     .then(function (response) {
       localStorage.removeItem('cldata');
-      localStorage.removeItem('video')
       transcodeForm.className = 'transcode-form';
     })
     .catch(function (error) {
