@@ -28,9 +28,8 @@ DataGen = "transcode/generate_data.py"
 # Log file path and name
 LogP = "info.log"
 
-# If true using advanced transcoder based on client choices
+# If Advanced true but Presets false then using advanced transcoder based on client choices
 Advanced = true
-
 # If Advanced and Presets set to true use Presets
 Presets = true
 

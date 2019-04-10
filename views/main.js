@@ -1,6 +1,6 @@
 'use strict';
 
-function SSE() {
+function sse() {
   var source = new EventSource('/sse/dashboard');
   console.log("Connection to /sse/dashboard established")
   var logg = '';
@@ -24,7 +24,7 @@ function SSE() {
   };
 }
 
-window.onload = SSE();
+window.onload = sse();
 
 var formGroupCount = 1;
 

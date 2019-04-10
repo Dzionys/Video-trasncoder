@@ -200,13 +200,7 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 				return
 			}
 		} else {
-			cmd, err = generateClientCmdLine(cldata, data, sfpath, fullsfname, tempfile)
-			if err != nil {
-				lp.WLog("Error: failed to generate cmd line")
-				log.Println(err)
-				removeFile("videos/", source)
-				return
-			}
+			cmd = generateClientCmdLine(cldata, data, sfpath, fullsfname, tempfile)
 		}
 	} else {
 		cmd = generateBaseCmdLine(data, sfpath, tempfile, fullsfname)

@@ -140,7 +140,7 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 	return cmd, dfs, nil
 }
 
-func generateClientCmdLine(crdata vd.Video, vdata vd.Vidinfo, sf string, sfname string, df string) (string, error) {
+func generateClientCmdLine(crdata vd.Video, vdata vd.Vidinfo, sf string, sfname string, df string) string {
 	var (
 		cmd       = ""
 		mapping   = ""
@@ -269,7 +269,7 @@ func generateClientCmdLine(crdata vd.Video, vdata vd.Vidinfo, sf string, sfname 
 
 	cmd = fmt.Sprintf("ffmpeg -i %v %v %v %v %v %v -async 1 -vsync 1 %v", sf, debugIntr, acode, vcode, scode, mapping, df)
 
-	return cmd, nil
+	return cmd
 }
 
 func generateBaseCmdLine(d vd.Vidinfo, sf string, df string, sfname string) string {

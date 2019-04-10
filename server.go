@@ -20,6 +20,7 @@ import (
 
 var (
 	uploadtemplate = template.Must(template.ParseGlob("upload.html"))
+	presets        = true
 	vf             vd.Video
 	prd            vd.PData
 	wg             sync.WaitGroup
@@ -143,6 +144,7 @@ func writeJsonResponse(w http.ResponseWriter, filename string) (vd.Vidinfo, erro
 		data    vd.Data
 		vidinfo vd.Vidinfo
 		err     error
+		info    []byte
 	)
 
 	vidinfo, err = tc.GetVidInfo("./videos/", filename, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
@@ -151,15 +153,23 @@ func writeJsonResponse(w http.ResponseWriter, filename string) (vd.Vidinfo, erro
 		return vidinfo, err
 	}
 
-	data, err = db.AddPresetsToJson(vidinfo)
-	if err != nil {
-		return vidinfo, err
-	}
+	if presets {
+		data, err = db.AddPresetsToJson(vidinfo)
+		if err != nil {
+			return vidinfo, err
+		}
 
-	info, err := json.Marshal(data)
-	if err != nil {
-		log.Println(err)
-		return vidinfo, err
+		info, err = json.Marshal(data)
+		if err != nil {
+			log.Println(err)
+			return vidinfo, err
+		}
+	} else {
+		info, err = json.Marshal(vidinfo)
+		if err != nil {
+			log.Println(err)
+			return vidinfo, err
+		}
 	}
 
 	w.WriteHeader(200)
@@ -191,14 +201,26 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Decode json file
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&prd)
-	if err != nil {
-		crGot = 2
-		log.Println(err)
-		w.WriteHeader(500)
-		return
+	if presets {
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&prd)
+		if err != nil {
+			crGot = 2
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+	} else {
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&vf)
+		if err != nil {
+			crGot = 2
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
 	}
+
 	w.WriteHeader(200)
 	crGot = 1
 }
@@ -240,6 +262,12 @@ func main() {
 		return
 	}
 
+	//Use client choices html if presets false
+	if CONF.Advanced && !CONF.Presets {
+		presets = false
+		uploadtemplate = template.Must(template.ParseGlob("uploadcl.html"))
+	}
+
 	// Write all logs to file
 	err = lp.OpenLogFile(CONF.LogP)
 	if err != nil {
@@ -256,6 +284,7 @@ func main() {
 		return
 	}
 
+	// Insert presets to database
 	err = db.InsertPresets()
 	if err != nil {
 		log.Println("Error: failed to insert presets to database")
