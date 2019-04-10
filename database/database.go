@@ -11,36 +11,13 @@ import (
 )
 
 var (
-	DB          *sql.DB
-	tables      tableQueries
-	videovalues = []string{
-		"Stream_Id",
-		"Name",
-		"State",
-		"Video_Codec",
-		"Width",
-		"Height",
-		"Frame_Rate",
-	}
-	audiovalues = []string{
-		"Stream_Id",
-		"Channels",
-		"Language",
-		"Audio_Codec",
-		"Video_Id",
-	}
-	subvalues = []string{
-		"Stream_Id",
-		"Language",
-		"Video_Id",
-	}
-	presetvalues = []string{
-		"Name",
-		"Type",
-		"Resolution",
-		"Codec",
-		"Bitrate",
-	}
+	DB           *sql.DB
+	tables       tableQueries
+	videovalues  = []string{"Stream_Id", "Name", "State", "Video_Codec", "Width", "Height", "Frame_Rate"}
+	audiovalues  = []string{"Stream_Id", "Channels", "Language", "Audio_Codec", "Video_Id"}
+	subvalues    = []string{"Stream_Id", "Language", "Video_Id"}
+	presetvalues = []string{"Name", "Type", "Resolution", "Codec", "Bitrate"}
+	streamvalues = []string{"Name"}
 )
 
 func OpenDatabase() error {
@@ -72,6 +49,10 @@ func OpenDatabase() error {
 		return err
 	}
 	err = prepareTable(tables.SubtitleTable)
+	if err != nil {
+		return err
+	}
+	err = prepareTable(tables.StreamTable)
 	if err != nil {
 		return err
 	}
@@ -118,14 +99,14 @@ func UpdateState(name string, state string) error {
 	return nil
 }
 
-func RemoveVideo(name string) error {
+func RemoveColumnByName(name string, tname string) error {
 	var (
 		err       error
 		query     string
 		statement *sql.Stmt
 	)
 
-	query = getDeleteQuery("Video", fmt.Sprintf("Name='%v'", name))
+	query = getDeleteQuery(tname, fmt.Sprintf("Name='%v'", name))
 	statement, err = DB.Prepare(query)
 	if err != nil {
 		log.Println("Error query: " + query)
@@ -139,7 +120,37 @@ func RemoveVideo(name string) error {
 	return nil
 }
 
-func InsertVideo(vid vd.Vidinfo, name string, state string) error {
+func InsertStream(vids []vd.Vidinfo, names []string, state string, sname string) error {
+	var (
+		err       error
+		query     string
+		statement *sql.Stmt
+		id        int
+	)
+
+	// Insert new stream
+	query = getInsertQuery(streamvalues, "Stream")
+	statement, err = DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	_, err = statement.Exec(sname)
+
+	// Get stream id
+	id, err = getIdByName("Stream", sname)
+	if err != nil {
+		return err
+	}
+
+	// Insert videos into stream
+	for i, vid := range vids {
+		InsertVideo(vid, names[i], state, id)
+	}
+
+	return nil
+}
+
+func InsertVideo(vid vd.Vidinfo, name string, state string, sid int) error {
 	var (
 		err       error
 		query     string
@@ -148,27 +159,48 @@ func InsertVideo(vid vd.Vidinfo, name string, state string) error {
 	)
 
 	// Insert video track
-	query = getInsertQuery(videovalues, "Video")
-	statement, err = DB.Prepare(query)
-	if err != nil {
-		log.Println("Error query: " + query)
-		return err
+	if sid < 0 {
+		query = getInsertQuery(videovalues, "Video")
+		statement, err = DB.Prepare(query)
+		if err != nil {
+			log.Println("Error query: " + query)
+			return err
+		}
+		_, err = statement.Exec(
+			vid.Videotrack[0].Index,
+			name,
+			state,
+			vid.Videotrack[0].CodecName,
+			vid.Videotrack[0].Width,
+			vid.Videotrack[0].Height,
+			vid.Videotrack[0].FrameRate,
+		)
+	} else {
+		vidval := videovalues
+		vidval = append(vidval, "Str_Id")
+		query = getInsertQuery(vidval, "Video")
+		statement, err = DB.Prepare(query)
+		if err != nil {
+			log.Println("Error query: " + query)
+			return err
+		}
+		_, err = statement.Exec(
+			vid.Videotrack[0].Index,
+			name,
+			state,
+			vid.Videotrack[0].CodecName,
+			vid.Videotrack[0].Width,
+			vid.Videotrack[0].Height,
+			vid.Videotrack[0].FrameRate,
+			sid,
+		)
 	}
-	_, err = statement.Exec(
-		vid.Videotrack[0].Index,
-		name,
-		state,
-		vid.Videotrack[0].CodecName,
-		vid.Videotrack[0].Width,
-		vid.Videotrack[0].Height,
-		vid.Videotrack[0].FrameRate,
-	)
 	if err != nil {
 		return err
 	}
 
 	// Get video id using as foreign keys in audio and video tracks
-	id, err = getVidId(name)
+	id, err = getIdByName("Video", name)
 	if err != nil {
 		return err
 	}
@@ -316,106 +348,4 @@ func GetPreset(name string) (vd.Preset, error) {
 	}
 
 	return prst, nil
-}
-
-func getInsertQuery(clms []string, tname string) string {
-	query := fmt.Sprintf("INSERT INTO %v (", tname)
-	val := "("
-	for i, c := range clms {
-		if i != len(clms)-1 {
-			query += fmt.Sprintf("%v,", c)
-			val += "?,"
-		} else {
-			query += fmt.Sprintf("%v", c)
-			val += "?"
-		}
-	}
-	val += ")"
-	query += fmt.Sprintf(") VALUES %v", val)
-
-	return query
-}
-
-func getSelectQuery(clms []string, tname string, key string) string {
-	query := "SELECT "
-	if len(clms) > 0 {
-		for i, c := range clms {
-			if i != len(clms)-1 {
-				query += fmt.Sprintf("%v,", c)
-			} else {
-				query += fmt.Sprintf("%v ", c)
-			}
-		}
-	} else {
-		query += "* "
-	}
-	query += "FROM " + tname
-	if key != "" {
-		query += " WHERE " + key
-	}
-
-	return query
-}
-
-func getDeleteQuery(tname string, key string) string {
-	query := fmt.Sprintf("DELETE FROM %v WHERE %v", tname, key)
-	return query
-}
-
-func getUpdateQuery(clms []string, tname string, key string) string {
-	query := fmt.Sprintf("UPDATE %v SET ", tname)
-	for i, c := range clms {
-		if i != len(clms)-1 {
-			query += fmt.Sprintf("%v,", c)
-		} else {
-			query += fmt.Sprintf("%v ", c)
-		}
-	}
-	query += "WHERE " + key
-
-	return query
-}
-
-func getVidId(name string) (int, error) {
-	var id = -1
-	row, err := DB.Query(fmt.Sprintf("SELECT Id FROM Video WHERE Name='%v'", name))
-	if err != nil {
-		return id, err
-	}
-	for row.Next() {
-		err = row.Scan(&id)
-		if err != nil {
-			return id, err
-		}
-	}
-
-	return id, nil
-}
-
-func prepareTable(table string) error {
-	statement, err := DB.Prepare(table)
-	if err != nil {
-		log.Println("Error: failed to prepare database table")
-		log.Println(err)
-		return err
-	}
-	_, err = statement.Exec()
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func runCustomQuery(query string) error {
-	statement, err := DB.Prepare(query)
-	if err != nil {
-		return err
-	}
-	_, err = statement.Exec()
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -18,7 +18,7 @@ var prRes = map[string]string{
 	"1080p": "1920x1080",
 }
 
-func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname string, dfwe string) (string, error) {
+func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname string, dfwe string) (string, []string, error) {
 	var (
 		cmd       = ""
 		mapping   []string
@@ -64,11 +64,11 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 
 		vidpr, err := db.GetPreset(s.VidPreset)
 		if err != nil {
-			return cmd, err
+			return cmd, dfs, err
 		}
 		audpr, err := db.GetPreset(s.AudPreset)
 		if err != nil {
-			return cmd, err
+			return cmd, dfs, err
 		}
 
 		svtres := strconv.Itoa(vdata.Videotrack[0].Width) + "x" + strconv.Itoa(vdata.Videotrack[0].Height)
@@ -137,7 +137,7 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 
 	}
 
-	return cmd, nil
+	return cmd, dfs, nil
 }
 
 func generateClientCmdLine(crdata vd.Video, vdata vd.Vidinfo, sf string, sfname string, df string) (string, error) {

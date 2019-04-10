@@ -104,6 +104,7 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 		err error
 		dur string
 		cmd string
+		dfs []string
 	)
 
 	// Load config file
@@ -187,9 +188,11 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 	lp.WLog(frmt)
 
 	// Generate command line
+	var tempdfs []string
 	if CONF.Advanced {
 		if CONF.Presets {
-			cmd, err = generatePresetCmdLine(prdata, data, sfpath, fullsfname, fmt.Sprintf("%v%v", CONF.TD, sfnamewe))
+			cmd, tempdfs, err = generatePresetCmdLine(prdata, data, sfpath, fullsfname, fmt.Sprintf("%v%v", CONF.TD, sfnamewe))
+			tempfile = tempdfs[0]
 			if err != nil {
 				lp.WLog("Error: failed to generate cmd line")
 				log.Println(err)
@@ -197,14 +200,23 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 				return
 			}
 		} else {
-			cmd, _ = generateClientCmdLine(cldata, data, sfpath, fullsfname, tempfile)
+			cmd, err = generateClientCmdLine(cldata, data, sfpath, fullsfname, tempfile)
+			if err != nil {
+				lp.WLog("Error: failed to generate cmd line")
+				log.Println(err)
+				removeFile("videos/", source)
+				return
+			}
 		}
 	} else {
 		cmd = generateBaseCmdLine(data, sfpath, tempfile, fullsfname)
 	}
 
-	println(cmd)
-	return
+	// removes path from stream files names
+	for _, d := range tempdfs {
+		df := strings.SplitAfterN(d, "/", 3)[2]
+		dfs = append(dfs, df)
+	}
 
 	// Run generated command line
 	lp.WLog("Starting to transcode")
@@ -239,39 +251,77 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 		return
 	} else {
 
-		// Removes source file and moves transcoded file to /videos/transcoded
-		removeFile(CONF.SD, source)
 		if _, err = os.Stat(CONF.DD); os.IsNotExist(err) {
 			os.Mkdir(CONF.DD, 0777)
 		}
-		os.Rename(tempfile, destinationfile)
-		dfn := sfnamewe + ".mp4"
-		ndata, err := GetVidInfo(CONF.DD, dfn, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
-		if err != nil {
-			lp.WLog("Error: failed getting video data")
-			log.Println(err)
-			removeFile(CONF.DD, dfn)
-			return
-		}
-		err = db.InsertVideo(ndata, dfn, "Transcoded")
-		if err != nil {
-			lp.WLog("Error: failed to insert video data in database")
-			log.Println(err)
-			removeFile(CONF.DD, dfn)
-			return
-		}
-		os.Remove(tempfile)
+		// Removes source file and moves transcoded file to /videos/transcoded
+		if CONF.Advanced && CONF.Presets {
+			var (
+				ndata []vd.Vidinfo
+			)
+			removeFile(CONF.SD, source)
+			for i, _ := range prdata.Streams {
+				os.Rename(CONF.TD+dfs[i], CONF.DD+dfs[i])
+				nd, err := GetVidInfo(CONF.DD, dfs[i], CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+				if err != nil {
+					lp.WLog("Error: failed getting video data")
+					log.Println(err)
+					removeStreamFiles(CONF.DD, dfs, sfnamewe)
+					return
+				}
+				ndata = append(ndata, nd)
+			}
+			err = db.InsertStream(ndata, dfs, "Transcoded", sfnamewe)
+			if err != nil {
+				lp.WLog("Error: failed to insert stream data in database")
+				log.Println(err)
+				removeStreamFiles(CONF.DD, dfs, sfnamewe)
+				return
+			}
 
-		msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(tempfile))
-		lp.WLog(msg)
+			msg = fmt.Sprintf("Transcoding coplete, stream name: %v", sfnamewe)
+			lp.WLog(msg)
+
+		} else {
+			removeFile(CONF.SD, source)
+			os.Rename(tempfile, destinationfile)
+			dfn := sfnamewe + ".mp4"
+			ndata, err := GetVidInfo(CONF.DD, dfn, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+			if err != nil {
+				lp.WLog("Error: failed getting video data")
+				log.Println(err)
+				removeFile(CONF.DD, dfn)
+				return
+			}
+			err = db.InsertVideo(ndata, dfn, "Transcoded", -1)
+			if err != nil {
+				lp.WLog("Error: failed to insert video data in database")
+				log.Println(err)
+				removeFile(CONF.DD, dfn)
+				return
+			}
+
+			msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(tempfile))
+			lp.WLog(msg)
+		}
 	}
 }
 
 func removeFile(path string, filename string) {
-	if os.Remove(path+filename) != nil {
-		lp.WLog("Error: failed removing source file")
+	if _, err := os.Stat(path + filename); os.Remove(path+filename) != nil && !os.IsNotExist(err) {
+		lp.WLog("Error: failed removing file")
 	}
-	db.RemoveVideo(filename)
+	db.RemoveColumnByName(filename, "Video")
+	return
+}
+
+func removeStreamFiles(path string, filenames []string, sname string) {
+	for _, fn := range filenames {
+		if os.Remove(path+fn) != nil {
+			lp.WLog("Error: failed removing stream file(s)")
+		}
+	}
+	db.RemoveColumnByName(sname, "Stream")
 	return
 }
 

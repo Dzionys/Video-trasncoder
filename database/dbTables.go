@@ -10,6 +10,7 @@ type (
 		AudioTable    string
 		SubtitleTable string
 		PresetTable   string
+		StreamTable   string
 		PresetValues  [][]string
 	}
 )

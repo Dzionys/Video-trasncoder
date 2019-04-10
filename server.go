@@ -98,10 +98,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = db.InsertVideo(data, handler.Filename, "Preparing")
+		err = db.InsertVideo(data, handler.Filename, "Preparing", -1)
 		if err != nil {
 			lp.WLog("Error: failed to insert video data in database")
 			log.Println(err)
+			removeFile("./videos/", handler.Filename)
 			return
 		}
 
@@ -207,7 +208,7 @@ func removeFile(path string, filename string) {
 	if os.Remove(path+filename) != nil {
 		lp.WLog("Error: failed removing source file")
 	}
-	db.RemoveVideo(filename)
+	db.RemoveColumnByName(filename, "Video")
 	return
 }
 
