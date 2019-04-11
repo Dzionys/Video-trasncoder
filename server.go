@@ -187,6 +187,40 @@ func upConf() (tc.Config, error) {
 	return conf, nil
 }
 
+func tctypeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(444)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+
+	type response struct {
+		Typechange bool `json:"tc"`
+	}
+	var rsp response
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&rsp)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+	if rsp.Typechange {
+		presets = false
+		uploadtemplate = template.Must(template.ParseGlob("uploadcl.html"))
+	} else {
+		presets = true
+		uploadtemplate = template.Must(template.ParseGlob("upload.html"))
+	}
+
+	w.WriteHeader(200)
+}
+
 func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		w.WriteHeader(444)
@@ -293,6 +327,7 @@ func main() {
 	}
 
 	http.Handle("/transcode", http.HandlerFunc(transcodeHandler))
+	http.Handle("/tctype", http.HandlerFunc(tctypeHandler))
 	http.Handle("/sse/dashboard", lp.B)
 	http.Handle("/upload", http.HandlerFunc(uploadHandler))
 	http.Handle("/", http.FileServer(http.Dir("views")))

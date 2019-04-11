@@ -183,3 +183,30 @@ function transcode(event) {
 
 inputFile.addEventListener('change', upload);
 transcodeForm.addEventListener('submit', transcode);
+
+document.addEventListener("DOMContentLoaded", function (event) {
+  var _selector = document.querySelector('input[name=checkbox]');
+  _selector.addEventListener('change', function (event) {
+    var data = {
+      "tc": true
+    }
+    if (_selector.checked) {
+      axios.post('/tctype', data)
+        .then(function (response) {
+        })
+        .catch(function (error) {
+          console.log(error)
+          // handle error
+        })
+    } else {
+      data.typechange = false;
+      axios.post('/tctype', data)
+        .then(function (response) {
+        })
+        .catch(function (error) {
+          console.log(error)
+          // handle error
+        })
+    }
+  });
+});
