@@ -1,0 +1,85 @@
+{{define "content"}}
+<div class="toggle" id="toggle">
+  <label class="switch">
+    <input onclick="setTimeout(reload, 50)" type="checkbox" id="checkBox" name="checkbox" checked>
+    <span class="slider round"></span>
+  </label>
+  <h4>Toggle for options transcoding</h4>
+</div>
+
+<div class="upload-form" id="upload-form">
+  <form method="post" enctype="multipart/form-data">
+    <input class="upload-form-input" type="file" name="file" id="input-file">
+    <label class="upload-form-label" id="upload-form-label" for="input-file">
+      <i class="fa fa-upload upload-form-icon"></i> Select a file
+    </label>
+  </form>
+  <form method="post" id="transcode" class="transcode-form">
+    <h4>File: <span id="filename"></span><span id="resolution"></span><span id="codec"></span><span id="frame-rate"></span></h4>
+    
+    <div class="form-group">
+      <span>
+        <label for="codec">Codec</label>
+        <select name="codec" id="codec-select">
+          <option selected value="nochange">Keep as is</option>
+          <option value="h265">H265</option>
+          <option value="h264">H264</option>
+        </select>
+      </span>
+
+      <span>
+        <label for="resolution">Resolution</label>
+        <select name="resolution" id="resolution-select">
+          <option selected value="nochange">Keep as is</option>
+          <option value="1920:1080">1080p</option>
+          <option value="1280:720">720p</option>
+          <option value="858:480">480p</option>
+          <option value="480:360">360p</option>
+        </select>
+      </span>
+
+      <span>
+        <label for="frame-rate">Frame rate</label>
+        <select name="frame-rate" id="fr-select">
+          <option selected value="nochange">Keep as is</option>
+          <option value="25.0">25</option>
+        </select>
+      </span>
+
+      <span>
+        <label for="audio">Audio</label>
+        <select name="audio" id="audio-select">
+          <option selected value="nochange">Keep as is</option>
+          <option value="acc">acc</option>
+        </select>
+      </span>
+
+      <span>
+        <label for="channels">Channels</label>
+        <select name="channels" id="channels-select">
+          <option selected value="nochange">Keep as is</option>
+          <option value="2">stereo</option>
+          <option value="1">mono</option>
+        </select>
+      </span>
+    </div>
+
+    <div class="form-group">
+      <span>
+        <label for="audio-tracks">Audio Tracks</label>
+        <select name="audio-tracks" id="audio-tracks">
+        </select>
+      </span>
+
+      <span>
+        <label for="subtitle-tracks">Subtitles</label>
+        <select name="subtitle-tracks" id="subtitle-tracks">
+        </select>
+      </span>
+    </div>
+
+    <input type="submit" value="Submit" id="transcode-submit">
+  </form>
+</div>
+{{end}}
+{{define "js"}}<script src="maincl.js"></script>{{end}}

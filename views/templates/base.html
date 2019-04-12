@@ -1,0 +1,35 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <title>Video Upload</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Video Transcoder</h1>
+             
+    {{template "content" .}}
+
+      <div id="main">
+        <div id="titlebar">
+          Log
+          <div class="buttons">
+            <span class="yellow"></span>
+            <span class="green"></span>
+            <span class="red" id="close"></span>
+          </div>
+        </div>
+        <code id="console"></code>
+      </div>
+      
+    </div>
+
+    <noscript>JavaScript is necessary!</noscript>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="base.js"></script>
+    {{template "js" . }}
+  </body>
+</html>

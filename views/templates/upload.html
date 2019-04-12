@@ -1,0 +1,55 @@
+{{define "content"}}
+<div class="toggle" id="toggle">
+  <label class="switch">
+    <input onclick="setTimeout(reload, 50)" type="checkbox" id="checkBox" name="checkbox">
+    <span class="slider round"></span>
+  </label>
+  <h4>Toggle for options transcoding</h4>
+</div>
+
+<div class="upload-form" id="upload-form">
+  <form method="post" enctype="multipart/form-data">
+    <input class="upload-form-input" type="file" name="file" id="input-file">
+    <label class="upload-form-label" id="upload-form-label" for="input-file">
+      <i class="fa fa-upload upload-form-icon"></i> Select a file
+    </label>
+  </form>
+  <form method="post" id="transcode" class="transcode-form">
+    <h4>File: <span id="filename"></span><span id="resolution"></span><span id="codec"></span><span id="frame-rate"></span></h4>
+    <div id="form-group-add">
+      <div class="form-group" id="formgroup">
+        <span>
+          <label for="vidpre-1" class="vidpre-label">Video presets</label>
+          <select name="vidpre-1" class="video-presets" id="video-presets-1">
+              <option selected value="nochange">None</option>
+          </select>
+        </span>
+
+        <span>
+          <label for="audpre-1" class="audpre-label">Audio presets</label>
+          <select name="audpre-1" class="audio-presets" id="audio-presets-1">
+              <option selected value="nochange">None</option>
+          </select>
+        </span>
+
+        <span>
+          <label for="audioselect-1" class="audioselect-label">Audio Tracks</label>
+          <select name="audioselect-1" class="audio-select" id="audio-select-1">
+          </select>
+        </span>
+
+        <span>
+          <label for="subselect-1" class="subselect-label">Subtitles</label>
+          <select name="subselect-1" class="subtitle-select" id="subtitle-select-1">
+          </select>
+        </span>
+      </div>
+    </div>
+    <button type="button" id="button-add">+</button>
+    <input type="submit" value="Submit" id="transcode-submit">
+  </form>
+</div>
+
+<script src="main.js"></script>
+{{end}}
+{{define "js"}}<script src="main.js"></script>{{end}}

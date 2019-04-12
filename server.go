@@ -19,7 +19,8 @@ import (
 )
 
 var (
-	uploadtemplate = template.Must(template.ParseGlob("upload.html"))
+	uploadtemplate string
+	basetemplate   = "./views/templates/base.html"
 	vf             vd.Video
 	prd            vd.PData
 	wg             sync.WaitGroup
@@ -34,9 +35,13 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(200)
 
-		err := uploadtemplate.Execute(w, nil)
+		t, err := template.ParseFiles(basetemplate, uploadtemplate)
 		if err != nil {
-			log.Print(err)
+			log.Panicln(err)
+		}
+		err = t.Execute(w, nil)
+		if err != nil {
+			log.Panicln(err)
 		}
 	case "POST":
 
@@ -92,6 +97,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 		data, err := writeJsonResponse(w, handler.Filename)
 		if err != nil {
+			w.WriteHeader(500)
 			log.Println(err)
 			lp.WLog("Error: failed send video data to client")
 			removeFile("./videos/", handler.Filename)
@@ -202,10 +208,10 @@ func tctypeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if rsp.Typechange {
 		CONF.Presets = false
-		uploadtemplate = template.Must(template.ParseGlob("uploadcl.html"))
+		uploadtemplate = "./views/templates/uploadcl.html"
 	} else {
 		CONF.Presets = true
-		uploadtemplate = template.Must(template.ParseGlob("upload.html"))
+		uploadtemplate = "./views/templates/upload.html"
 	}
 
 	w.WriteHeader(200)
@@ -289,7 +295,9 @@ func main() {
 	//Use client choices html if CONF.Presets false
 	if CONF.Advanced && !CONF.Presets {
 		CONF.Presets = false
-		uploadtemplate = template.Must(template.ParseGlob("uploadcl.html"))
+		uploadtemplate = "./views/templates/uploadcl.html"
+	} else {
+		uploadtemplate = "./views/templates/upload.html"
 	}
 
 	// Write all logs to file

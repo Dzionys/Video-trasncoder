@@ -19,9 +19,9 @@ function upload(event) {
       toggle.className = 'toggle uploaded';
       checkBox.disabled = true;
       uploadFormInput.disabled = true;
-      resolution.innerText = `${response.data['Vidinfo']['videotrack'][0]['width']}x${response.data['Vidinfo']['videotrack'][0]['height']}, `;
-      codec.innerText = `${response.data['Vidinfo']['videotrack'][0]['codecName']}, `;
-      framerate.innerText = `${response.data['Vidinfo']['videotrack'][0]['frameRate']}fps`;
+      resolution.innerText = `${response.data['videotrack'][0]['width']}x${response.data['videotrack'][0]['height']}, `;
+      codec.innerText = `${response.data['videotrack'][0]['codecName']}, `;
+      framerate.innerText = `${response.data['videotrack'][0]['frameRate']}fps`;
 
       if (!response.data.audiotracks == 0){
         response.data.audiotrack.map(function (value) {
