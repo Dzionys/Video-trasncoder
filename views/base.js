@@ -68,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
           // handle error
         })
     } else {
-      data.typechange = false;
+      data.tc = false;
       axios.post('/tctype', data)
         .then(function (response) {
         })
