@@ -12,9 +12,9 @@
     <div class="container">
       <h1>Video Transcoder</h1>
 
-      <div class="toggle">
+      <div class="toggle" id="toggle">
         <label class="switch">
-          <input type="checkbox" id="checkBox" name="checkbox">
+          <input onclick="setTimeout(reload, 100)" type="checkbox" id="checkBox" name="checkbox">
           <span class="slider round"></span>
         </label>
         <h4>Toggle for options transcoding</h4>

@@ -181,6 +181,11 @@ body,
 
 /* Slide button */
 
+.toggle.uploaded {
+  background-color: #232b33;
+  color: #8eb8e5;
+}
+
 .toggle {
   background-color: #7c99b4;
   height: 2.2rem;

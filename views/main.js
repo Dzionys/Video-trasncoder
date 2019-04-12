@@ -34,6 +34,8 @@ var uploadForm = document.getElementById('upload-form');
 var transcodeForm = document.getElementById('transcode');
 var uploadFormLabel = document.getElementById('upload-form-label');
 var uploadFormInput = document.getElementById('input-file');
+var toggle = document.getElementById('toggle');
+var checkBox = document.getElementById('checkBox');
 
 var codec = document.getElementById('codec');
 var resolution = document.getElementById('resolution');
@@ -92,6 +94,8 @@ function upload(event) {
       uploadForm.className = 'upload-form uploaded';
       uploadFormLabel.className = 'upload-form-label uploaded';
       transcodeForm.className = 'transcode-form uploaded';
+      toggle.className = 'toggle uploaded';
+      checkBox.disabled = true;
       uploadFormInput.disabled = true;
       resolution.innerText = `${response.data['Vidinfo']['videotrack'][0]['width']}x${response.data['Vidinfo']['videotrack'][0]['height']}, `;
       codec.innerText = `${response.data['Vidinfo']['videotrack'][0]['codecName']}, `;
@@ -224,6 +228,10 @@ function transcode(event) {
     });
 
   event.preventDefault();
+}
+
+function reload() {
+  location.reload();
 }
 
 buttonAdd.addEventListener('click', function(event) {

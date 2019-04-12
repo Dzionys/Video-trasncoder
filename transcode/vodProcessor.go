@@ -10,16 +10,16 @@ import (
 	"strings"
 	"sync"
 
+	cf "../conf"
 	db "../database"
 	"../lp"
 	vd "../videodata"
-	"github.com/BurntSushi/toml"
 )
 
 var (
 	wg      sync.WaitGroup
 	DEBUG   = false
-	CONF    Config
+	CONF    cf.Config
 	allRes  = ""
 	lastPer = -1
 )
@@ -98,7 +98,7 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup) error {
 	return nil
 }
 
-func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.PData) {
+func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.PData, conf cf.Config) {
 	lp.WLog("Starting VOD Processor..")
 	var (
 		err error
@@ -107,14 +107,7 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 		dfs []string
 	)
 
-	// Load config file
-	CONF, err = upConf()
-	if err != nil {
-		log.Println(err)
-		lp.WLog("Error: failed to load config file")
-		removeFile("videos/", source)
-		return
-	}
+	CONF = conf
 
 	// Path to source file
 	sfpath := CONF.SD + source
@@ -317,14 +310,4 @@ func removeStreamFiles(path string, filenames []string, sname string) {
 	}
 	db.RemoveColumnByName(sname, "Stream")
 	return
-}
-
-// Load config file
-func upConf() (Config, error) {
-	var conf Config
-	if _, err := toml.DecodeFile("transcode/conf.toml", &conf); err != nil {
-		log.Println("error geting conf.toml: ", err)
-		return conf, err
-	}
-	return conf, nil
 }

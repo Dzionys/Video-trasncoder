@@ -11,7 +11,7 @@ function sse() {
     if (!event.data.startsWith('<')) {
       logg += '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br>';
       localStorage.setItem('filename', event.data)
-      document.getElementById('filename').innerText = event.data;
+      document.getElementById('filename').innerText = `${event.data}, `;
     } else if (event.data.indexOf('Error') > -1) {
       logg += '<span class="error">' + event.data + '</span><br>';
     } else if (/^[\s\S]*<br>.*?Progress:.*?<br>$/.test(logg) && event.data.includes('Progress:')) {
@@ -33,6 +33,8 @@ var uploadForm = document.getElementById('upload-form');
 var transcodeForm = document.getElementById('transcode');
 var uploadFormLabel = document.getElementById('upload-form-label');
 var uploadFormInput = document.getElementById('input-file');
+var toggle = document.getElementById('toggle');
+var checkBox = document.getElementById('checkBox');
 
 var codec = document.getElementById('codec');
 var resolution = document.getElementById('resolution');
@@ -54,10 +56,12 @@ function upload(event) {
       uploadForm.className = 'upload-form uploaded';
       uploadFormLabel.className = 'upload-form-label uploaded';
       transcodeForm.className = 'transcode-form uploaded';
+      toggle.className = 'toggle uploaded';
+      checkBox.disabled = true;
       uploadFormInput.disabled = true;
-      resolution.innerText = `${response.data['videotrack'][0]['width']}x${response.data['videotrack'][0]['height']}`;
-      codec.innerText = response.data['videotrack'][0]['codecName'];
-      framerate.innerText = `${response.data['videotrack'][0]['frameRate']}fps`;
+      resolution.innerText = `${response.data['Vidinfo']['videotrack'][0]['width']}x${response.data['Vidinfo']['videotrack'][0]['height']}, `;
+      codec.innerText = `${response.data['Vidinfo']['videotrack'][0]['codecName']}, `;
+      framerate.innerText = `${response.data['Vidinfo']['videotrack'][0]['frameRate']}fps`;
 
       if (!response.data.audiotracks == 0){
         response.data.audiotrack.map(function (value) {
@@ -179,6 +183,10 @@ function transcode(event) {
     });
 
   event.preventDefault();
+}
+
+function reload() {
+  location.reload();
 }
 
 inputFile.addEventListener('change', upload);

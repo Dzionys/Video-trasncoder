@@ -11,21 +11,20 @@ import (
 	"path/filepath"
 	"sync"
 
+	cf "./conf"
 	db "./database"
 	"./lp"
 	tc "./transcode"
 	vd "./videodata"
-	"github.com/BurntSushi/toml"
 )
 
 var (
 	uploadtemplate = template.Must(template.ParseGlob("upload.html"))
-	presets        = true
 	vf             vd.Video
 	prd            vd.PData
 	wg             sync.WaitGroup
 	crGot          = 0
-	CONF           tc.Config
+	CONF           cf.Config
 )
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +111,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		if CONF.Advanced {
 			go waitForClientData(handler.Filename, data)
 		} else {
-			go tc.ProcessVodFile(handler.Filename, data, vf, prd)
+			go tc.ProcessVodFile(handler.Filename, data, vf, prd, CONF)
 			resetData()
 		}
 	default:
@@ -127,7 +126,7 @@ func waitForClientData(filename string, data vd.Vidinfo) {
 			lp.WLog("Information received")
 
 			// Strart transcoding if data is received
-			tc.ProcessVodFile(filename, data, vf, prd)
+			go tc.ProcessVodFile(filename, data, vf, prd, CONF)
 			resetData()
 			break
 		} else if crGot == 2 {
@@ -153,7 +152,7 @@ func writeJsonResponse(w http.ResponseWriter, filename string) (vd.Vidinfo, erro
 		return vidinfo, err
 	}
 
-	if presets {
+	if CONF.Presets {
 		data, err = db.AddPresetsToJson(vidinfo)
 		if err != nil {
 			return vidinfo, err
@@ -176,15 +175,6 @@ func writeJsonResponse(w http.ResponseWriter, filename string) (vd.Vidinfo, erro
 	w.Write(info)
 
 	return vidinfo, nil
-}
-
-func upConf() (tc.Config, error) {
-	var conf tc.Config
-	if _, err := toml.DecodeFile("transcode/conf.toml", &conf); err != nil {
-		log.Println("error geting conf.toml: ", err)
-		return conf, err
-	}
-	return conf, nil
 }
 
 func tctypeHandler(w http.ResponseWriter, r *http.Request) {
@@ -211,10 +201,10 @@ func tctypeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if rsp.Typechange {
-		presets = false
+		CONF.Presets = false
 		uploadtemplate = template.Must(template.ParseGlob("uploadcl.html"))
 	} else {
-		presets = true
+		CONF.Presets = true
 		uploadtemplate = template.Must(template.ParseGlob("upload.html"))
 	}
 
@@ -235,7 +225,7 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Decode json file
-	if presets {
+	if CONF.Presets {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&prd)
 		if err != nil {
@@ -289,16 +279,16 @@ func main() {
 
 	// Load config file
 	var err error
-	CONF, err = upConf()
+	CONF, err = cf.GetConf()
 	if err != nil {
 		log.Println("Error: failed to load config file")
 		log.Println(err)
 		return
 	}
 
-	//Use client choices html if presets false
+	//Use client choices html if CONF.Presets false
 	if CONF.Advanced && !CONF.Presets {
-		presets = false
+		CONF.Presets = false
 		uploadtemplate = template.Must(template.ParseGlob("uploadcl.html"))
 	}
 
@@ -318,10 +308,10 @@ func main() {
 		return
 	}
 
-	// Insert presets to database
+	// Insert CONF.Presets to database
 	err = db.InsertPresets()
 	if err != nil {
-		log.Println("Error: failed to insert presets to database")
+		log.Println("Error: failed to insert CONF.Presets to database")
 		log.Panicln(err)
 		return
 	}
