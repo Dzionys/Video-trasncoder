@@ -17,10 +17,12 @@ Your browser must support HTML5 Sever-Sent-Events.
 
   - github.com/BurntSushi/toml
   - github.com/mattn/go-sqlite3
+  - github.com/gorilla/mux
 
 ```sh
 $ go get github.com/BurntSushi/toml
 $ go get github.com/mattn/go-sqlite3
+$ go get github.com/gorilla/mux
 ```
 
 ### Run

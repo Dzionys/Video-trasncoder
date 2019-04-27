@@ -21,3 +21,13 @@ type (
 		Language string
 	}
 )
+
+type Dt struct {
+	VideoStream []VideoStream
+}
+
+type VideoStream struct {
+	Stream bool
+	State  string
+	Video  []Video
+}

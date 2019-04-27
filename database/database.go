@@ -350,6 +350,96 @@ func GetPreset(name string) (vd.Preset, error) {
 	return prst, nil
 }
 
+func getVideoData(vdname string) (vd.Video, string, error) {
+	var (
+		video vd.Video
+		err   error
+		query string
+		rows  *sql.Rows
+		state string
+	)
+
+	id, err := getIdByName("Video", vdname)
+	if err != nil {
+		return video, "", err
+	}
+	clms := []string{
+		"Stream_Id",
+		"Channels",
+		"Language",
+		"Audio_Codec",
+	}
+	key := fmt.Sprintf("Video_Id=%v", id)
+	query = getSelectQuery(clms, "Audio", key)
+	rows, err = DB.Query(query)
+	if err != nil {
+		return video, "", err
+	}
+
+	for rows.Next() {
+		var tempaud vd.Audio
+		rows.Scan(
+			&tempaud.AtId,
+			&tempaud.Channels,
+			&tempaud.Language,
+			&tempaud.AtCodec,
+		)
+		video.AudioT = append(video.AudioT, tempaud)
+	}
+
+	clms2 := []string{
+		"Stream_Id",
+		"Language",
+	}
+	query = getSelectQuery(clms2, "Subtitle", key)
+	rows, err = DB.Query(query)
+	if err != nil {
+		return video, "", err
+	}
+
+	for rows.Next() {
+		var tempsub vd.Sub
+		rows.Scan(
+			&tempsub.StId,
+			&tempsub.Language,
+		)
+		video.SubtitleT = append(video.SubtitleT, tempsub)
+	}
+
+	clms3 := []string{
+		"Stream_Id",
+		"State",
+		"Video_Codec",
+		"Width",
+		"Height",
+		"Frame_Rate",
+	}
+	key2 := fmt.Sprintf("Name='%v'", vdname)
+	query = getSelectQuery(clms3, "Video", key2)
+	rows, err = DB.Query(query)
+	if err != nil {
+		return video, "", err
+	}
+
+	var (
+		width  int
+		height int
+	)
+	for rows.Next() {
+		rows.Scan(
+			&video.VtId,
+			&state,
+			&video.VtCodec,
+			&width,
+			&height,
+			&video.FrameRate,
+		)
+		video.VtRes = strconv.Itoa(width) + "x" + strconv.Itoa(height)
+	}
+
+	return video, state, nil
+}
+
 func GetAllStreamVideos(sname string) ([]string, error) {
 	var (
 		err   error
@@ -379,4 +469,81 @@ func GetAllStreamVideos(sname string) ([]string, error) {
 	}
 
 	return names, nil
+}
+
+func PutVideosToJson() (vd.Dt, error) {
+	var (
+		videos vd.Dt
+		err    error
+		query  string
+		rows   *sql.Rows
+	)
+
+	clms := []string{
+		"Name",
+	}
+	query = getSelectQuery(clms, "Stream", "")
+	rows, err = DB.Query(query)
+	if err != nil {
+		return videos, err
+	}
+	var streamnames []string
+	for rows.Next() {
+		var name string
+		rows.Scan(&name)
+		streamnames = append(streamnames, name)
+	}
+
+	// Video streams
+	for _, n := range streamnames {
+		var strvid []string
+		strvid, err = GetAllStreamVideos(n)
+		if err != nil {
+			return videos, err
+		}
+		var (
+			state string
+			vid   vd.Video
+		)
+		var tempvideo vd.VideoStream
+		for _, v := range strvid {
+			vid, state, err = getVideoData(v)
+			if err != nil {
+				return videos, err
+			}
+			tempvideo.Video = append(tempvideo.Video, vid)
+		}
+		tempvideo.State = state
+		tempvideo.Stream = true
+		videos.VideoStream = append(videos.VideoStream, tempvideo)
+	}
+
+	// Indvidual videos
+	key := "Str_Id IS NULL"
+	query = getSelectQuery(clms, "Video", key)
+	rows, err = DB.Query(query)
+	if err != nil {
+		return videos, err
+	}
+
+	var names []string
+	for rows.Next() {
+		var name string
+		rows.Scan(&name)
+		names = append(names, name)
+	}
+
+	for _, n := range names {
+		vid, state, err := getVideoData(n)
+		if err != nil {
+			return videos, err
+		}
+		var tempvideo vd.VideoStream
+		tempvideo.Stream = false
+		tempvideo.State = state
+		tempvideo.Video = append(tempvideo.Video, vid)
+		videos.VideoStream = append(videos.VideoStream, tempvideo)
+	}
+
+	return videos, err
 }

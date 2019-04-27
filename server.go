@@ -258,6 +258,22 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	crGot = 1
 }
 
+func vdHandler(w http.ResponseWriter, r *http.Request) {
+	data, err := db.PutVideosToJson()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	dt, err := json.Marshal(data)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	w.Write(dt)
+}
+
 func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
 	var (
 		sqncs vd.Sequences
@@ -372,6 +388,7 @@ func main() {
 	r.Handle("/ngx/mapping/{name}", http.HandlerFunc(ngxMappingHandler))
 	r.Handle("/transcode", http.HandlerFunc(transcodeHandler))
 	r.Handle("/tctype", http.HandlerFunc(tctypeHandler))
+	r.Handle("/vd", http.HandlerFunc(vdHandler))
 	r.Handle("/sse/dashboard", lp.B)
 	r.Handle("/upload", http.HandlerFunc(uploadHandler))
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("views"))))
