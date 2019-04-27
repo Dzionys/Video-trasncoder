@@ -435,6 +435,7 @@ func getVideoData(vdname string) (vd.Video, string, error) {
 			&video.FrameRate,
 		)
 		video.VtRes = strconv.Itoa(width) + "x" + strconv.Itoa(height)
+		video.FileName = vdname
 	}
 
 	return video, state, nil
@@ -513,6 +514,7 @@ func PutVideosToJson() (vd.Dt, error) {
 			}
 			tempvideo.Video = append(tempvideo.Video, vid)
 		}
+		tempvideo.StreamName = n
 		tempvideo.State = state
 		tempvideo.Stream = true
 		videos.VideoStream = append(videos.VideoStream, tempvideo)

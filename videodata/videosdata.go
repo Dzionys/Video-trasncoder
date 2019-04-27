@@ -27,7 +27,8 @@ type Dt struct {
 }
 
 type VideoStream struct {
-	Stream bool
-	State  string
-	Video  []Video
+	Stream     bool
+	StreamName string
+	State      string
+	Video      []Video
 }
