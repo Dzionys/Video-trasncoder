@@ -222,7 +222,7 @@ func tctypeHandler(w http.ResponseWriter, r *http.Request) {
 
 func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		w.WriteHeader(444)
+		w.WriteHeader(400)
 		return
 	}
 
@@ -259,6 +259,11 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func vdHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		w.WriteHeader(400)
+		return
+	}
+
 	data, err := db.PutVideosToJson()
 	if err != nil {
 		log.Println(err)
@@ -272,6 +277,7 @@ func vdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(dt)
+	w.WriteHeader(200)
 }
 
 func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
@@ -282,20 +288,31 @@ func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	w.WriteHeader(http.StatusOK)
 
-	names, err := db.GetAllStreamVideos(vars["name"])
-	if err != nil {
-		log.Panicln(err)
-		return
-	}
-
-	for _, n := range names {
+	if filepath.Ext(vars["name"]) == ".mp4" {
 		temp := vd.Clip{
 			"source",
-			fmt.Sprintf(tcvidpath, n),
+			fmt.Sprintf(tcvidpath, vars["name"]),
 		}
 		var tempclip vd.Clips
 		tempclip.Clips = append(tempclip.Clips, temp)
 		sqncs.Sequences = append(sqncs.Sequences, tempclip)
+
+	} else {
+		names, err := db.GetAllStreamVideos(vars["name"])
+		if err != nil {
+			log.Panicln(err)
+			return
+		}
+
+		for _, n := range names {
+			temp := vd.Clip{
+				"source",
+				fmt.Sprintf(tcvidpath, n),
+			}
+			var tempclip vd.Clips
+			tempclip.Clips = append(tempclip.Clips, temp)
+			sqncs.Sequences = append(sqncs.Sequences, tempclip)
+		}
 	}
 
 	j, err := json.Marshal(sqncs)

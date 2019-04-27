@@ -7,6 +7,7 @@ Video file transcoding system.
   - ffmpeg
   - golang (used version 1.11.5)
   - python (used version 3.6.7 should work with 2.7.*)
+  - nginx VOD module
 
 You need to compile ffmpeg with: NASM, Yasm, libx264, libx265 and libfdk-acc in order to be able to use ACC audio encoder.
 Full guide for all platforms: http://trac.ffmpeg.org/wiki/CompilationGuide
