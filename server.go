@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/gorilla/mux"
+
 	cf "./conf"
 	db "./database"
 	"./lp"
@@ -20,6 +22,7 @@ import (
 
 var (
 	uploadtemplate string
+	tcvidpath      = "/home/dzionys/Documents/Video-trasncoder/videos/transcoded/%v"
 	basetemplate   = "./views/templates/base.html"
 	vf             vd.Video
 	prd            vd.PData
@@ -255,6 +258,46 @@ func transcodeHandler(w http.ResponseWriter, r *http.Request) {
 	crGot = 1
 }
 
+func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		sqncs vd.Sequences
+	)
+
+	vars := mux.Vars(r)
+	w.WriteHeader(http.StatusOK)
+
+	names, err := db.GetAllStreamVideos(vars["name"])
+	if err != nil {
+		log.Panicln(err)
+		return
+	}
+
+	for _, n := range names {
+		temp := vd.Clip{
+			"source",
+			fmt.Sprintf(tcvidpath, n),
+		}
+		var tempclip vd.Clips
+		tempclip.Clips = append(tempclip.Clips, temp)
+		sqncs.Sequences = append(sqncs.Sequences, tempclip)
+	}
+
+	j, err := json.Marshal(sqncs)
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.Write(j)
+}
+
+func homeHandler(w http.ResponseWriter, r *http.Request) {
+	hometemplate := template.Must(template.ParseGlob("./views/index.html"))
+	err := hometemplate.Execute(w, nil)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
 func removeFile(path string, filename string) {
 	resetData()
 	if os.Remove(path+filename) != nil {
@@ -324,11 +367,15 @@ func main() {
 		return
 	}
 
-	http.Handle("/transcode", http.HandlerFunc(transcodeHandler))
-	http.Handle("/tctype", http.HandlerFunc(tctypeHandler))
-	http.Handle("/sse/dashboard", lp.B)
-	http.Handle("/upload", http.HandlerFunc(uploadHandler))
-	http.Handle("/", http.FileServer(http.Dir("views")))
+	r := mux.NewRouter()
+
+	r.Handle("/ngx/mapping/{name}", http.HandlerFunc(ngxMappingHandler))
+	r.Handle("/transcode", http.HandlerFunc(transcodeHandler))
+	r.Handle("/tctype", http.HandlerFunc(tctypeHandler))
+	r.Handle("/sse/dashboard", lp.B)
+	r.Handle("/upload", http.HandlerFunc(uploadHandler))
+	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("views"))))
+	http.Handle("/", r)
 	fmt.Println("Listening on port: 8080...")
 	log.Fatalf("Exited: %s", http.ListenAndServe(":8080", nil))
 }

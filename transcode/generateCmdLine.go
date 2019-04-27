@@ -76,6 +76,10 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 			tempvc += fmt.Sprintf(" -s %v", prRes[vidpr.Resolution])
 		}
 
+		if vdata.Videotrack[0].FrameRate < 25 && i != 0 {
+			tempvc += " -r 25"
+		}
+
 		if vidpr.Codec != vdata.Videotrack[0].CodecName {
 			switch vidpr.Codec {
 

@@ -349,3 +349,34 @@ func GetPreset(name string) (vd.Preset, error) {
 
 	return prst, nil
 }
+
+func GetAllStreamVideos(sname string) ([]string, error) {
+	var (
+		err   error
+		names []string
+		query string
+		rows  *sql.Rows
+	)
+	id, err := getIdByName("Stream", sname)
+	if err != nil {
+		return names, err
+	}
+
+	clms := []string{
+		"Name",
+	}
+	key := fmt.Sprintf("Str_Id=%v", id)
+	query = getSelectQuery(clms, "Video", key)
+	rows, err = DB.Query(query)
+	if err != nil {
+		return names, err
+	}
+
+	var name string
+	for rows.Next() {
+		rows.Scan(&name)
+		names = append(names, name)
+	}
+
+	return names, nil
+}
