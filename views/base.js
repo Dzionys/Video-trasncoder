@@ -24,6 +24,9 @@ function sse() {
       logg += '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br>';
       localStorage.setItem('filename', event.data)
       document.getElementById('filename').innerText = `${event.data}, `;
+    } else if (event.data.startsWith('videouri')) {
+      var temp = event.data;
+      manifestUri = temp.replace('videouri: ', '');
     } else if (event.data.indexOf('Error') > -1) {
       resetUplodForm();
       logg += '<span class="error">' + event.data + '</span><br>';

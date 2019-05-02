@@ -35,3 +35,7 @@ Presets = true
 
 # Available file formats to be uploaded
 FileTypes = [".mkv", ".mp4", ".avi", ".mov", ".mpg", ".wmv"]
+
+# Nginx URL
+NginxUrl = "http://localhost:88/dash/"
+NginxVodFile = "/manifest.mpd"

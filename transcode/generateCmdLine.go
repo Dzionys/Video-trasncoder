@@ -84,7 +84,7 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 			switch vidpr.Codec {
 
 			case "h264":
-				tempvc += fmt.Sprintf(" -c:v:%[1]v libx264 -b:v:%[1]v %[2]vk -metadata:s:v:%[1]v name=\"%[3]v\"", s.VtId, vidpr.Bitrate, sfname)
+				tempvc += fmt.Sprintf(" -c:v:%[1]v libx264 -profile:v:%[1]v main -b:v:%[1]v %[2]vk -metadata:s:v:%[1]v name=\"%[3]v\"", s.VtId, vidpr.Bitrate, sfname)
 				break
 
 			case "hevc":
@@ -215,7 +215,7 @@ func generateClientCmdLine(crdata vd.Video, vdata vd.Vidinfo, sf string, sfname 
 		switch crdata.VtCodec {
 
 		case "h264":
-			vcode += fmt.Sprintf(" -c:v:%[1]v libx264 -b:v:%[1]v %[2]vk -metadata:s:v:%[1]v name=\"%[3]v\"", crdata.VtId, CONF.VBW, sfname)
+			vcode += fmt.Sprintf(" -c:v:%[1]v libx264 -profile:v:%[1]v main -b:v:%[1]v %[2]vk -metadata:s:v:%[1]v name=\"%[3]v\"", crdata.VtId, CONF.VBW, sfname)
 			break
 
 		case "h265":

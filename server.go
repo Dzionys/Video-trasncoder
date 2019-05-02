@@ -281,9 +281,11 @@ func vdHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
-	var (
-		sqncs vd.Sequences
-	)
+	if r.Method != "GET" {
+		w.WriteHeader(400)
+		return
+	}
+	var sqncs vd.Sequences
 
 	vars := mux.Vars(r)
 	w.WriteHeader(http.StatusOK)
@@ -323,9 +325,17 @@ func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(j)
 }
 
-func homeHandler(w http.ResponseWriter, r *http.Request) {
-	hometemplate := template.Must(template.ParseGlob("./views/index.html"))
-	err := hometemplate.Execute(w, nil)
+func playerHandler(w http.ResponseWriter, r *http.Request) {
+	watchtemplate := template.Must(template.ParseGlob("./views/templates/watch.html"))
+	err := watchtemplate.Execute(w, nil)
+	if err != nil {
+		log.Println(err)
+	}
+}
+
+func listHandler(w http.ResponseWriter, r *http.Request) {
+	listtemplate := template.Must(template.ParseGlob("./views/templates/list.html"))
+	err := listtemplate.Execute(w, nil)
 	if err != nil {
 		log.Println(err)
 	}
@@ -388,7 +398,7 @@ func main() {
 	//Open database
 	err = db.OpenDatabase()
 	if err != nil {
-		//log.Panicln(err)
+		log.Panicln(err)
 		return
 	}
 
@@ -406,10 +416,11 @@ func main() {
 	r.Handle("/transcode", http.HandlerFunc(transcodeHandler))
 	r.Handle("/tctype", http.HandlerFunc(tctypeHandler))
 	r.Handle("/vd", http.HandlerFunc(vdHandler))
+	r.Handle("/list", http.HandlerFunc(listHandler))
+	r.Handle("/watch", http.HandlerFunc(playerHandler))
 	r.Handle("/sse/dashboard", lp.B)
 	r.Handle("/upload", http.HandlerFunc(uploadHandler))
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("views"))))
-	http.Handle("/", r)
 	fmt.Println("Listening on port: 8080...")
-	log.Fatalf("Exited: %s", http.ListenAndServe(":8080", nil))
+	log.Fatalf("Exited: %s", http.ListenAndServe(":8080", r))
 }

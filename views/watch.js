@@ -1,6 +1,6 @@
 
-var manifestUri =
-'https://storage.googleapis.com/shaka-demo-assets/angel-one/dash.mpd';
+var manifestUri = localStorage.getItem('mnfst');
+localStorage.removeItem('mnfst');
 
 function initApp() {
 // Install built-in polyfills to patch browser incompatibilities.
