@@ -4,10 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 
 	vd "../videodata"
 	_ "github.com/mattn/go-sqlite3"
+
+	cf "../conf"
 )
 
 var (
@@ -99,7 +102,7 @@ func UpdateState(name string, state string) error {
 	return nil
 }
 
-func RemoveColumnByName(name string, tname string) error {
+func RemoveRowByName(name string, tname string) error {
 	var (
 		err       error
 		query     string
@@ -242,6 +245,126 @@ func InsertVideo(vid vd.Vidinfo, name string, state string, sid int) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func RemoveVideo(name string, stream bool) error {
+	var (
+		err   error
+		path  string
+		state string
+	)
+
+	CONF, err := cf.GetConf()
+	if err != nil {
+		return err
+	}
+	path = CONF.SD
+
+	if stream {
+		svnames, err := GetAllStreamVideos(name)
+		if err != nil {
+			return err
+		}
+		err = RemoveRowByName(name, "Stream")
+		if err != nil {
+			return err
+		}
+		for _, n := range svnames {
+			err = os.Remove(path + n)
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		clms := []string{
+			"State",
+		}
+		query := getSelectQuery(clms, "Video", fmt.Sprintf("Name='%v'", name))
+		rows, err := DB.Query(query)
+		if err != nil {
+			return err
+		}
+		for rows.Next() {
+			rows.Scan(&state)
+		}
+
+		if state == "Transcoded" {
+			path = CONF.DD
+		}
+
+		err = os.Remove(path + name)
+		if err != nil {
+			return err
+		}
+		err = RemoveRowByName(name, "Video")
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func UpdateVideoName(upname string, oname string, stream bool) error {
+	var (
+		err       error
+		statement *sql.Stmt
+		query     string
+		tname     string
+	)
+
+	if stream {
+		tname = "Stream"
+	} else {
+		tname = "video"
+
+		var (
+			state string
+			path  string
+		)
+
+		CONF, err := cf.GetConf()
+		if err != nil {
+			return err
+		}
+
+		clms := []string{
+			"State",
+		}
+		query = getSelectQuery(clms, "Video", fmt.Sprintf("Name='%v'", oname))
+		rows, err := DB.Query(query)
+		if err != nil {
+			return err
+		}
+		for rows.Next() {
+			rows.Scan(&state)
+		}
+
+		if state == "Transcoded" {
+			path = CONF.DD
+		} else {
+			path = CONF.SD
+		}
+
+		oldp := path + oname
+		newp := path + upname
+		err = os.Rename(oldp, newp)
+		if err != nil {
+			return err
+		}
+	}
+	clms := []string{
+		fmt.Sprintf("Name='%v'", upname),
+	}
+	query = getUpdateQuery(clms, tname, fmt.Sprintf("Name='%v'", oname))
+	statement, err = DB.Prepare(query)
+	if err != nil {
+		println(query)
+		return err
+	}
+	statement.Exec()
 
 	return nil
 }

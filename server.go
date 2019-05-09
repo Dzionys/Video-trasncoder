@@ -36,16 +36,18 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 
-		w.WriteHeader(200)
-
 		t, err := template.ParseFiles(basetemplate, uploadtemplate)
 		if err != nil {
+			w.WriteHeader(500)
 			log.Panicln(err)
 		}
 		err = t.Execute(w, nil)
 		if err != nil {
+			w.WriteHeader(500)
 			log.Panicln(err)
 		}
+		w.WriteHeader(200)
+
 	case "POST":
 
 		lp.WLog("Upload started")
@@ -55,6 +57,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		file, handler, err := r.FormFile("file")
 		if err != nil {
 			log.Println(err)
+			w.WriteHeader(500)
 			lp.WLog("Error: failed to upload file")
 			return
 		}
@@ -84,6 +87,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		defer dst.Close()
 		if err != nil {
 			log.Println(err)
+			w.WriteHeader(500)
 			lp.WLog("Error: could not create file")
 			return
 		}
@@ -92,6 +96,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		lp.WLog("Writing to file")
 		if _, err := io.Copy(dst, file); err != nil {
 			log.Println(err)
+			w.WriteHeader(500)
 			lp.WLog("Error: failed to write file")
 			removeFile("./videos/", handler.Filename)
 			return
@@ -107,10 +112,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = db.InsertVideo(data, handler.Filename, "Preparing", -1)
+		err = db.InsertVideo(data, handler.Filename, "Not transcoded", -1)
 		if err != nil {
 			lp.WLog("Error: failed to insert video data in database")
 			log.Println(err)
+			w.WriteHeader(500)
 			removeFile("./videos/", handler.Filename)
 			return
 		}
@@ -188,7 +194,7 @@ func writeJsonResponse(w http.ResponseWriter, filename string) (vd.Vidinfo, erro
 
 func tctypeHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		w.WriteHeader(444)
+		w.WriteHeader(400)
 		return
 	}
 
@@ -267,17 +273,19 @@ func vdHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := db.PutVideosToJson()
 	if err != nil {
 		log.Println(err)
+		w.WriteHeader(500)
 		return
 	}
 
 	dt, err := json.Marshal(data)
 	if err != nil {
 		log.Println(err)
+		w.WriteHeader(500)
 		return
 	}
 
-	w.Write(dt)
 	w.WriteHeader(200)
+	w.Write(dt)
 }
 
 func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
@@ -303,6 +311,7 @@ func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
 		names, err := db.GetAllStreamVideos(vars["name"])
 		if err != nil {
 			log.Panicln(err)
+			w.WriteHeader(500)
 			return
 		}
 
@@ -320,9 +329,57 @@ func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
 	j, err := json.Marshal(sqncs)
 	if err != nil {
 		log.Println(err)
+		w.WriteHeader(500)
+		return
 	}
 
 	w.Write(j)
+}
+
+func vidUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		w.WriteHeader(400)
+		return
+	}
+
+	var (
+		updata vd.Update
+		err    error
+	)
+
+	if err = r.ParseForm(); err != nil {
+		crGot = 2
+		log.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	err = decoder.Decode(&updata)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(500)
+		return
+	}
+
+	if updata.Utype == 2 {
+		err = db.UpdateVideoName(updata.Data, updata.Odata, updata.Stream)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+	} else if updata.Utype == 1 {
+		err = db.RemoveVideo(updata.Data, updata.Stream)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(500)
+			return
+		}
+	} else {
+		w.WriteHeader(417)
+		w.Write([]byte("error: unsupported update type"))
+	}
 }
 
 func playerHandler(w http.ResponseWriter, r *http.Request) {
@@ -330,6 +387,8 @@ func playerHandler(w http.ResponseWriter, r *http.Request) {
 	err := watchtemplate.Execute(w, nil)
 	if err != nil {
 		log.Println(err)
+		w.WriteHeader(500)
+		return
 	}
 }
 
@@ -338,6 +397,8 @@ func listHandler(w http.ResponseWriter, r *http.Request) {
 	err := listtemplate.Execute(w, nil)
 	if err != nil {
 		log.Println(err)
+		w.WriteHeader(500)
+		return
 	}
 }
 
@@ -346,7 +407,7 @@ func removeFile(path string, filename string) {
 	if os.Remove(path+filename) != nil {
 		lp.WLog("Error: failed removing source file")
 	}
-	db.RemoveColumnByName(filename, "Video")
+	db.RemoveRowByName(filename, "Video")
 	return
 }
 
@@ -417,6 +478,7 @@ func main() {
 	r.Handle("/tctype", http.HandlerFunc(tctypeHandler))
 	r.Handle("/vd", http.HandlerFunc(vdHandler))
 	r.Handle("/list", http.HandlerFunc(listHandler))
+	r.Handle("/videoupdate", http.HandlerFunc(vidUpdateHandler))
 	r.Handle("/watch", http.HandlerFunc(playerHandler))
 	r.Handle("/sse/dashboard", lp.B)
 	r.Handle("/upload", http.HandlerFunc(uploadHandler))

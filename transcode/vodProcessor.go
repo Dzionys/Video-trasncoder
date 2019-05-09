@@ -298,7 +298,7 @@ func removeFile(path string, filename string) {
 	if _, err := os.Stat(path + filename); os.Remove(path+filename) != nil && !os.IsNotExist(err) {
 		lp.WLog("Error: failed removing file")
 	}
-	db.RemoveColumnByName(filename, "Video")
+	db.RemoveRowByName(filename, "Video")
 	return
 }
 
@@ -308,6 +308,6 @@ func removeStreamFiles(path string, filenames []string, sname string) {
 			lp.WLog("Error: failed removing stream file(s)")
 		}
 	}
-	db.RemoveColumnByName(sname, "Stream")
+	db.RemoveRowByName(sname, "Stream")
 	return
 }
