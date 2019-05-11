@@ -1,6 +1,6 @@
 'use strict';
 
-window.onload = sse();
+var save = false;
 
 function upload(event) {
   var file = event.target.files[0];
@@ -46,6 +46,7 @@ function upload(event) {
         "VtCodec": "",
         "FrameRate": 0.0,
         "VtRes": "",
+        "Save": false,
         "AudioT": [],
         "SubtitleT": []
       };
@@ -61,9 +62,11 @@ function upload(event) {
     });
 }
 
-function transcode(event) {
+function transcode(event, save) {
   var video = JSON.parse(localStorage.getItem('video'));
   var data = JSON.parse(localStorage.getItem('cldata'));
+
+  data['Save'] = save;
 
   // Video codec
   var e = document.getElementById('codec-select');
@@ -139,7 +142,8 @@ function transcode(event) {
     })
     .catch(function (error) {
       console.log(error)
-      // handle error
+      // handle errortranscodeForm.addEventListener('submit', transcode(event, false));
+buttonSave.addEventListener('submit', transcode(event, true));
     });
 
   event.preventDefault();
@@ -147,3 +151,7 @@ function transcode(event) {
 
 inputFile.addEventListener('change', upload);
 transcodeForm.addEventListener('submit', transcode);
+buttonSave.addEventListener('click', function(event) {
+  save = true;
+  transcode(event);
+});

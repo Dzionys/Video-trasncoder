@@ -9,7 +9,7 @@ Video file transcoding system.
   - python (used version 3.6.7 should work with 2.7.*)
   - nginx VOD module
 
-You need to compile ffmpeg with: NASM, Yasm, libx264, libx265 and libfdk-acc in order to be able to use ACC audio encoder.
+You need to compile ffmpeg with: libx264, libx265 and libfdk-acc in order to be able to use ACC audio encoder.
 Full guide for all platforms: http://trac.ffmpeg.org/wiki/CompilationGuide
 
 Your browser must support HTML5 Sever-Sent-Events.
@@ -28,7 +28,7 @@ $ go get github.com/gorilla/mux
 
 ### Run
 
-Before running server check configuration file located in /transcode/conf.toml and change it based on your preferences.
+Before running server check configuration file located in /conf/conf.toml and change it based on your preferences.
 ```sh
 $ go run server.go
 ```

@@ -1,5 +1,8 @@
+window.onload = sse();
+
 var inputFile = document.getElementById('input-file');
 var transcodeSubmit = document.getElementById('transcode-submit');
+var buttonSave = document.getElementById('button-save');
 var uploadForm = document.getElementById('upload-form');
 var transcodeForm = document.getElementById('transcode');
 var uploadFormLabel = document.getElementById('upload-form-label');
@@ -32,7 +35,9 @@ function sse() {
       logg += '<span class="error">' + event.data + '</span><br>';
     } else if (/^[\s\S]*<br>.*?Progress:.*?<br>$/.test(logg) && event.data.includes('Progress:')) {
       logg = logg.replace(/^([\s\S]*<br>)(.*?Progress:.*?)(<br>)$/, `$1${event.data}$3`);
-    } else if (event.data.indexOf('Transcoding coplete') > -1) {
+    } else if (event.data.indexOf('Transcoding coplete') > -1 || event.data.indexOf('Transcoding parameters saved') > -1) {
+      currentmsg = event.data;
+      logg += currentmsg + '<br>';
       resetUplodForm();
     } else {
       currentmsg = event.data;

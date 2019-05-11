@@ -50,6 +50,11 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 
+		if !(crGot == 0) {
+			crGot = 4
+			lp.WLog("Warning: previous session was interupted")
+		}
+
 		lp.WLog("Upload started")
 
 		//Starts readig file by chuncking
@@ -124,6 +129,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		lp.UpdateMessage(handler.Filename)
 
 		if CONF.Advanced {
+			crGot = 3
 			go waitForClientData(handler.Filename, data)
 		} else {
 			go tc.ProcessVodFile(handler.Filename, data, vf, prd, CONF)
@@ -147,6 +153,9 @@ func waitForClientData(filename string, data vd.Vidinfo) {
 		} else if crGot == 2 {
 			lp.WLog("Error: failed receiving information from client")
 			removeFile("videos/", filename)
+			return
+		} else if crGot == 4 {
+			resetData()
 			return
 		}
 	}
@@ -284,7 +293,6 @@ func vdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(200)
 	w.Write(dt)
 }
 
@@ -296,7 +304,6 @@ func ngxMappingHandler(w http.ResponseWriter, r *http.Request) {
 	var sqncs vd.Sequences
 
 	vars := mux.Vars(r)
-	w.WriteHeader(http.StatusOK)
 
 	if filepath.Ext(vars["name"]) == ".mp4" {
 		temp := vd.Clip{
@@ -376,6 +383,8 @@ func vidUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			return
 		}
+	} else if updata.Utype == 3 {
+		go tc.StartTranscode(updata.Data, CONF, "", "")
 	} else {
 		w.WriteHeader(417)
 		w.Write([]byte("error: unsupported update type"))

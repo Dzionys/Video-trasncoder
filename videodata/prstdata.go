@@ -3,6 +3,7 @@ package vd
 type (
 	PData struct {
 		FileName string
+		Save     bool
 		Streams  []Streams
 	}
 	Streams struct {

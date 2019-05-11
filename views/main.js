@@ -1,8 +1,7 @@
 'use strict';
 
-window.onload = sse();
-
 var formGroupCount = 1;
+var save = false;
 
 var formGroup = document.getElementsByClassName('form-group')[0];
 var buttonAdd = document.getElementById('button-add');
@@ -116,6 +115,7 @@ function upload(event) {
 function transcode(event) {
   var data = {
     "FileName": localStorage.getItem('filename'),
+    "Save": save,
     "Streams": []
   }
 
@@ -200,3 +200,8 @@ buttonAdd.addEventListener('click', function(event) {
 
 inputFile.addEventListener('change', upload);
 transcodeForm.addEventListener('submit', transcode);
+buttonSave.addEventListener('click', function(event) {
+  save = true;
+  transcode(event);
+  console.log('gay');
+});

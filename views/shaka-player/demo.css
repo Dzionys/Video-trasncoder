@@ -1,0 +1,347 @@
+/**
+ * Copyright 2016 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/* copied from MDL stylesheet */
+/* copied from MDL stylesheet */
+/* The default color from MDL is too low-contrast on a white background. */
+.mdl-button--accent.mdl-button--accent {
+  color: #0053dd;
+}
+/* This is a less mixin only, rather than a CSS class. MDL has an equivalent
+ * class with the same name, which can be used in the application directly. */
+.borderless {
+  outline: none;
+}
+#contents {
+  padding: 20px;
+  text-align: center;
+}
+.close-button {
+  /* Move the button to the top-right. */
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  /* Give the button a round background, meant to look like the play button. */
+  border-radius: 50%;
+  width: 32px;
+  color: #000;
+  background: rgba(255, 255, 255, 0.85);
+}
+html,
+body {
+  /* Ensure everything has a consistent font. */
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+}
+/* Give the FAB a drop shadow, that expands a little bit when moused over. */
+.mdl-button--fab {
+  filter: drop-shadow(0 2px 5px #333333);
+  transition: 0.2s ease-in-out;
+}
+.mdl-button--fab:hover {
+  filter: drop-shadow(0 2px 8px #333333);
+}
+/* Remove vertical padding on MDL text fields, but only while they are in
+ * the hamburger menu. */
+.hamburger-menu .mdl-textfield {
+  padding: 0;
+  width: 200px;
+}
+.hamburger-menu .mdl-textfield__label {
+  top: 4px;
+}
+.hamburger-menu .mdl-textfield__label:after {
+  bottom: 0;
+}
+.hamburger-menu .mdl-layout-title {
+  /* The line-height style in mdl-layout-title looks weird on narrow displays,
+   * so remove it in the hamburger menu. */
+  line-height: unset;
+}
+.hamburger-menu .input-container-label {
+  /* Give the labels for input rows a left margin. This keeps them from directly
+   * touching the left side of the screen, for improved readability. */
+  margin-left: 1em;
+}
+.hamburger-menu .mdl-button--raised {
+  /* Left-align the text content of the section header buttons. */
+  text-align: left;
+}
+/* Styles for error display. */
+#error-display {
+  background-color: #d84a38;
+  margin: 0;
+  padding: 1em;
+  line-height: 2em;
+  text-align: center;
+  width: 100%;
+}
+#error-display-link {
+  color: white;
+}
+.input-disabled {
+  pointer-events: none;
+}
+#error-display-close-button {
+  background-color: #d84a38;
+  color: white;
+  position: relative;
+  padding: 0 0;
+  top: 0em;
+  right: 2em;
+  float: right;
+  font-weight: bold;
+  text-decoration: none;
+  cursor: pointer;
+}
+/* Styles for asset cards. */
+.asset-card {
+  display: inline-block;
+  margin: 1em;
+}
+.asset-card-unsupported {
+  display: inline-block;
+  margin: 1em;
+  background-color: #ddd;
+}
+/* Asset icons. */
+.feature-icon {
+  width: 24px;
+  height: 24px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  display: inline-block;
+  /* features */
+  /* key systems */
+}
+.feature-icon[icon="high_definition"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M5%204a2%202%200%200%200-2%202v12a2%202%200%200%200%202%202h14c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2H5zm-.064%202.75h1.212c.386%200%20.573.19.573.582v3.592h2.27V7.332c0-.393.184-.582.57-.582h1.214c.386%200%20.57.19.57.582v9.336c0%20.393-.184.582-.57.582H9.561c-.386%200-.57-.19-.57-.582v-3.709H6.72v3.709c0%20.393-.187.582-.573.582H4.936c-.386%200-.57-.19-.57-.582V7.332c0-.393.184-.582.57-.582zm8.574%200h3.885c1.327%200%202.24.946%202.24%202.27v5.933c0%201.353-.913%202.297-2.24%202.297H13.51c-.386%200-.584-.203-.584-.596V7.346c0-.393.198-.596.584-.596zm2.027%202.05c-.157%200-.256.103-.256.262v5.876c0%20.16.1.261.256.261h.785c.643%200%20.957-.319.957-.959V9.76c0-.64-.298-.96-.898-.96h-.844z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="ultra_high_definition"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M5%204a2%202%200%200%200-2%202v12a2%202%200%200%200%202%202h14c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2H5zm2.188%202.75h2.656c.385%200%20.57.19.57.582v5.803h.629c.385%200%20.572.218.572.553v.916c0%20.392-.187.582-.572.582h-.629v1.482c0%20.393-.185.582-.57.582h-.985c-.385%200-.572-.19-.572-.582v-1.482H5.262c-.386%200-.573-.19-.573-.582v-1.208c0-.189.043-.393.1-.568L6.66%207.172c.1-.247.228-.422.527-.422zm6.058%200h1.213c.385%200%20.57.203.57.596v3.578h.371a.614.614%200%200%200%20.6-.465l.857-3.316c.058-.233.229-.393.557-.393h1.272c.385%200%20.684.277.57.67l-.942%203.402c-.128.466-.4.829-.742%201.12.343.276.614.64.742%201.105l.971%203.549c.114.363-.171.654-.556.654h-1.272c-.343%200-.513-.174-.57-.393L16%2013.41a.636.636%200%200%200-.6-.451h-.37v3.709c0%20.393-.186.582-.571.582h-1.213c-.385%200-.572-.19-.572-.582V7.332c0-.393.187-.582.572-.582zM8.287%208.7l-1.47%204.435h1.47V8.699z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="subtitles"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M20%204H4c-1.1%200-2%20.9-2%202v12c0%201.1.9%202%202%202h16c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2zM4%2012h4v2H4v-2zm10%206H4v-2h10v2zm6%200h-4v-2h4v2zm0-4H10v-2h10v2z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="closed_caption"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M19%204H5a2%202%200%200%200-2%202v12a2%202%200%200%200%202%202h14c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2zm-8%207H9.5v-.5h-2v3h2V13H11v1c0%20.55-.45%201-1%201H7c-.55%200-1-.45-1-1v-4c0-.55.45-1%201-1h3c.55%200%201%20.45%201%201v1zm7%200h-1.5v-.5h-2v3h2V13H18v1c0%20.55-.45%201-1%201h-3c-.55%200-1-.45-1-1v-4c0-.55.45-1%201-1h3c.55%200%201%20.45%201%201v1z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="live"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20fill%3D%22none%22%20d%3D%22M0%200h24v24H0V0z%22%2F%3E%3Cpath%20d%3D%22M21%206h-7.59l3.29-3.29L16%202l-4%204-4-4-.71.71L10.59%206H3a2%202%200%200%200-2%202v12c0%201.1.9%202%202%202h18c1.1%200%202-.9%202-2V8a2%202%200%200%200-2-2zm0%2014H3V8h18v12zM9%2010v8l7-4z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="trick_mode"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M4%2018l8.5-6L4%206v12zm9-12v12l8.5-6L13%206z%22%2F%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="surround_sound"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M20%204H4c-1.1%200-2%20.9-2%202v12c0%201.1.9%202%202%202h16c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2zM7.76%2016.24l-1.41%201.41A7.909%207.909%200%200%201%204%2012c0-2.05.78-4.1%202.34-5.66l1.41%201.41C6.59%208.93%206%2010.46%206%2012s.59%203.07%201.76%204.24zM12%2016c-2.21%200-4-1.79-4-4s1.79-4%204-4%204%201.79%204%204-1.79%204-4%204zm5.66%201.66l-1.41-1.41C17.41%2015.07%2018%2013.54%2018%2012s-.59-3.07-1.76-4.24l1.41-1.41A7.909%207.909%200%200%201%2020%2012c0%202.05-.78%204.1-2.34%205.66zM12%2010c-1.1%200-2%20.9-2%202s.9%202%202%202%202-.9%202-2-.9-2-2-2z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="multiple_languages"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M11.99%202C6.47%202%202%206.48%202%2012s4.47%2010%209.99%2010C17.52%2022%2022%2017.52%2022%2012S17.52%202%2011.99%202zm6.93%206h-2.95a15.65%2015.65%200%200%200-1.38-3.56A8.03%208.03%200%200%201%2018.92%208zM12%204.04c.83%201.2%201.48%202.53%201.91%203.96h-3.82c.43-1.43%201.08-2.76%201.91-3.96zM4.26%2014C4.1%2013.36%204%2012.69%204%2012s.1-1.36.26-2h3.38c-.08.66-.14%201.32-.14%202%200%20.68.06%201.34.14%202H4.26zm.82%202h2.95c.32%201.25.78%202.45%201.38%203.56A7.987%207.987%200%200%201%205.08%2016zm2.95-8H5.08a7.987%207.987%200%200%201%204.33-3.56A15.65%2015.65%200%200%200%208.03%208zM12%2019.96c-.83-1.2-1.48-2.53-1.91-3.96h3.82c-.43%201.43-1.08%202.76-1.91%203.96zM14.34%2014H9.66c-.09-.66-.16-1.32-.16-2%200-.68.07-1.35.16-2h4.68c.09.65.16%201.32.16%202%200%20.68-.07%201.34-.16%202zm.25%205.56c.6-1.11%201.06-2.31%201.38-3.56h2.95a8.03%208.03%200%200%201-4.33%203.56zM16.36%2014c.08-.66.14-1.32.14-2%200-.68-.06-1.34-.14-2h3.38c.16.64.26%201.31.26%202s-.1%201.36-.26%202h-3.38z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="audio_only"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M12%203v9.28a4.39%204.39%200%200%200-1.5-.28C8.01%2012%206%2014.01%206%2016.5S8.01%2021%2010.5%2021c2.31%200%204.2-1.75%204.45-4H15V6h4V3h-7z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="widevine"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M5%204a2%202%200%200%200-2%202v12a2%202%200%200%200%202%202h14c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2H5zm-.764%203.389h1.092c.289%200%20.414.203.451.459l.678%206.746.965-6.783c.038-.243.201-.422.44-.422h1.267c.238%200%20.413.179.451.422l.965%206.77.678-6.733c.037-.256.187-.46.45-.46h1.093c.288%200%20.463.204.425.46l-.877%208.304c-.037.256-.2.46-.45.46H9.68c-.239%200-.4-.18-.438-.423l-.74-5.34-.74%205.34c-.038.243-.213.422-.451.422H5.14c-.251%200-.414-.203-.452-.459L3.8%207.848c-.038-.256.149-.46.437-.46zm10.069%200h1.142c.239%200%20.402.165.44.382l1.203%207.104%201.203-7.104a.452.452%200%200%201%20.453-.382h1.016a.45.45%200%200%201%20.44.523l-1.495%208.317c-.038.255-.187.382-.426.382h-2.496c-.238%200-.402-.165-.44-.382l-1.491-8.305c-.063-.345.2-.535.45-.535z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="clear_key"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M5%204a2%202%200%200%200-2%202v12a2%202%200%200%200%202%202h14c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2H5zm3.053%203.389h2.521c.339%200%20.514.178.514.523v.754c0%20.345-.175.523-.514.523h-1.63c-.502%200-.803.282-.803.844v3.934c0%20.562.275.844.84.844h1.593c.339%200%20.514.178.514.523v.754c0%20.345-.175.523-.514.523H8.04c-1.166%200-1.969-.83-1.969-2.017v-5.2c0-1.175.816-2.005%201.983-2.005zm4.549%200h1.066c.339%200%20.502.178.502.523v3.143h.326c.25%200%20.463-.166.525-.409l.754-2.914c.05-.204.2-.343.489-.343h1.117c.338%200%20.6.243.5.588l-.826%202.988a1.97%201.97%200%200%201-.653.984c.301.243.54.562.653.97l.851%203.118c.1.32-.15.574-.488.574h-1.117c-.301%200-.452-.152-.502-.343l-.778-3.03a.556.556%200%200%200-.525-.394h-.326v3.258c0%20.344-.163.51-.502.51h-1.066c-.34%200-.502-.166-.502-.51V7.898c0-.344.163-.51.502-.51z%22%2F%3E%3C%2Fsvg%3E");
+}
+.feature-icon[icon="playready"] {
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%3E%3Cpath%20d%3D%22M0%200h24v24H0z%22%20fill%3D%22none%22%2F%3E%3Cpath%20d%3D%22M5%204a2%202%200%200%200-2%202v12a2%202%200%200%200%202%202h14c1.1%200%202-.9%202-2V6c0-1.1-.9-2-2-2H5zm1.293%203.389h3.11c1.153%200%201.968.83%201.968%202.006v1.544c0%201.189-.802%202.02-1.969%202.02H7.873v3.129c0%20.345-.163.523-.502.523H6.316c-.338%200-.513-.165-.513-.51V7.899c0-.344.164-.51.49-.51zm6.564%200h3.098c1.166%200%201.982.83%201.982%202.006v1.277c0%20.651-.376%201.329-1.091%201.674.288.255.514.766.652%201.226l.678%202.465c.088.294-.088.574-.477.574h-1.168c-.288%200-.414-.126-.476-.343l-.752-3.03c-.05-.204-.29-.394-.528-.394h-.338v3.244c0%20.345-.163.523-.501.523h-1.053c-.339%200-.516-.165-.516-.51V7.899c0-.344.164-.51.49-.51zm-4.76%201.8a.226.226%200%200%200-.224.23v1.75h.588c.564%200%20.842-.28.842-.843v-.332c0-.575-.289-.805-.803-.805h-.402zm6.59%200c-.137%200-.25.116-.25.23v1.636h.59c.565%200%20.84-.281.84-.83v-.23c0-.563-.288-.806-.803-.806h-.377z%22%2F%3E%3C%2Fsvg%3E");
+}
+@media screen and (max-width: 400px) {
+  /* On screens less than 400px, the 330px-wide cards need to shrink.
+   * This makes them shrink linearly below that threshold. */
+  .asset-card {
+    width: 82.5%;
+  }
+}
+.asset-card div {
+  /* Override the default value of "stretch" for mdl cards. */
+  justify-content: center;
+}
+.asset-card img {
+  /* Icons are 300px by 210px (10:7 aspect ratio). */
+  width: 300px;
+  /* Constrain to space if necessary. */
+  max-width: 100%;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+.asset-card-unsupported img {
+  /* Set opacity to 50%, so the image is greyed out also. */
+  opacity: 0.5;
+}
+.asset-card.selected {
+  border-style: solid;
+  border-color: #8080ff;
+}
+/* Override some MDL styles to get the desired look and feel. */
+.app-header {
+  background-color: white;
+  color: black;
+}
+@media screen and (max-width: 780px) {
+  /* On smaller screens, the header should expand and the elements in it should
+   * wrap to remain accessible. */
+  #nav-button-container {
+    height: auto;
+    flex-wrap: wrap;
+  }
+  /* The spacer should be hidden in this mode, so that the version number is no
+   * longer being forced to the right. */
+  .app-header .mdl-layout-spacer {
+    display: none;
+  }
+}
+.significant-right-padding {
+  padding-right: 8em;
+}
+.mdl-dialog {
+  /* Override MDL dialog width, so that input elements don't overflow. */
+  width: 320px;
+}
+.mdl-dialog img {
+  width: 300px;
+  max-width: 100%;
+}
+.app-header .mdl-layout__drawer-button {
+  color: black;
+}
+.app-header .logo {
+  max-height: 80%;
+  /* Match the padding of the buttons next to the logo. */
+  padding: 0 16px;
+}
+footer li {
+  list-style: square outside;
+}
+/* More specific selector than MDL's stylesheet uses. */
+footer .mdl-mega-footer__link-list a {
+  /* The default color was low-contrast on this dark background. */
+  color: #d1d1d1;
+}
+footer .mdl-mega-footer__link-list a[disabled] {
+  /* Making the disabled version even darker would be even worse in terms of
+     * contrast, so use a strikethrough style instead. */
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+/* Style the container that contains the "add custom assets" button. */
+.add-button-container {
+  text-align: right;
+  margin: 1em;
+}
+.disabled-by-fail {
+  pointer-events: none;
+  user-select: none;
+}
+/* Style the hamburger menu (mdl drawer). */
+.hamburger-menu {
+  /* To properly change the width of an MDL drawer, you also have to change the
+   * transform applied to hide it. */
+  width: 550px;
+  transform: translateX(-550px);
+  /* If the main app page is scrollable, we don't want see "under" the drawer.
+   * Making the position fixed means it won't move, no matter what.
+   * Within the drawer itself, the drawer content can still be scrolled. */
+  position: fixed;
+  /* Constrain to the window if necessary, so that it doesn't overflow small
+   * mobile screens. */
+  max-width: 100%;
+}
+/* When the drawer is open, MDL sets overflow: hidden on the main content
+ * in order to hide the scroll bar.
+ *
+ * This also causes most of the elements on screen to jump to the right,
+ * though, which is very visually distracting.  This overrides that style, to
+ * prevent that behavior.
+ *
+ * The class name mdl-layout__content is repeated twice to make the selector
+ * more specific than what MDL is using. */
+.mdl-layout__drawer.is-visible ~ .mdl-layout__content.mdl-layout__content {
+  overflow: auto;
+}
+/* The title contains the close button, so use flex to center it.
+ * Also use right-padding to keep it off the right edge. */
+#hamburger-menu-title {
+  display: flex;
+  align-items: center;
+  padding-right: 16px;
+}
+.mdl-layout__obfuscator.is-visible {
+  /* If the main app page is scrollable, we don't want see "under" the layout
+   * obfuscator (which grays out the app while the drawer is open).
+   * Making the position fixed means it won't move, no matter what. */
+  position: fixed;
+}
+/* Control the size of the video. */
+#video-bar {
+  /* The video bar fills the horizontal space, but its height depends on the
+   * contents. */
+  width: 100%;
+  /* Add a little bit of padding on top, to make the video not look cropped. */
+  padding-top: 1em;
+}
+/* This is an id rather than a class so that it will consistently be applied
+ * before UI CSS values on all platforms. */
+.video-container {
+  /* Fixed width, but height will expand based on video aspect ratio.
+   * Does not affect fullscreen size. */
+  width: 640px;
+  margin: auto;
+  /* Constrain to the window if necessary, so that it doesn't overflow small
+   * mobile screens. */
+  max-width: 100%;
+}
+#video {
+  /* Fill whatever space we're given, whether fullscreen or not. */
+  width: 100%;
+  height: 100%;
+  margin: auto;
+}
+/* Style the intermediate tooltip attach points, required for tooltips to be
+ * added to disabled buttons. */
+.tooltip-attach-point {
+  display: inline-block;
+}
+/* Style the input containers. */
+.input-container-row {
+  display: inline-block;
+}
+.input-container-style-flex {
+  display: flex;
+  flex-wrap: wrap;
+}
+.input-container-style-vertical {
+  text-align: left;
+}
+.input-container-style-accordion {
+  text-align: left;
+  opacity: 0;
+  max-height: 0px;
+  transition: 0.3s ease-in-out;
+}
+.input-container-style-accordion.show {
+  opacity: 1;
+  /* If the max-height is too high (e.g. set to 100%), the "sliding out"
+   * animation is too fast to make out with the eye.
+   * So give it a fixed maximum instead. */
+  max-height: 1000px;
+}
+.input-container-label {
+  padding-right: 1em;
+}

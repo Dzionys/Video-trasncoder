@@ -73,8 +73,15 @@ function list() {
                 var tempbt = document.createElement('button');
                 tempbt.type = 'button';
                 tempbt.className = 'list-item-button';
-                tempbt.innerHTML = 'Watch';
-                tempbt.setAttribute('onclick', `watch(${i})`);
+                if (d['State'] != 'Transcoded') {
+                    if (d['State'] != 'Transcoding') {
+                        tempbt.innerHTML = "Transcode";
+                        tempbt.setAttribute('onclick', `transcode(${i})`)
+                    }
+                } else {
+                    tempbt.innerHTML = 'Watch';
+                    tempbt.setAttribute('onclick', `watch(${i})`);
+                }
                 var tempdbt = document.createElement('button');
                 tempdbt.type = 'button';
                 tempdbt.className = 'list-item-button';
@@ -86,7 +93,9 @@ function list() {
                 tempebt.innerHTML = 'Edit';
                 tempebt.setAttribute('onclick', `update(${i}, false)`);
 
-                tempa.appendChild(tempbt);
+                if (d['State'] != "Transcoding") {
+                    tempa.appendChild(tempbt);
+                }
                 tempa.appendChild(tempdbt);
                 tempa.appendChild(tempebt);
                 newListItem.appendChild(tempspan);
@@ -101,6 +110,11 @@ function list() {
     .catch(function (error) {
         console.log(error);
     })
+}
+
+function transcode(i) {
+    var name = document.getElementById(`file-name-${i}`).innerHTML;
+    postvideoupdate(3, name, '', false);
 }
 
 function delet(i, stream) {

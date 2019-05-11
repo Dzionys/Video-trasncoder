@@ -102,9 +102,7 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 	lp.WLog("Starting VOD Processor..")
 	var (
 		err error
-		dur string
 		cmd string
-		dfs []string
 	)
 
 	CONF = conf
@@ -181,9 +179,11 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 	lp.WLog(frmt)
 
 	// Generate command line
+	var save bool
 	var tempdfs []string
 	if CONF.Advanced {
 		if CONF.Presets {
+			save = prdata.Save
 			cmd, tempdfs, err = generatePresetCmdLine(prdata, data, sfpath, fullsfname, fmt.Sprintf("%v%v", CONF.TD, sfnamewe))
 			tempfile = tempdfs[0]
 			if err != nil {
@@ -193,16 +193,113 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 				return
 			}
 		} else {
+			save = cldata.Save
 			cmd = generateClientCmdLine(cldata, data, sfpath, fullsfname, tempfile)
 		}
 	} else {
 		cmd = generateBaseCmdLine(data, sfpath, tempfile, fullsfname)
 	}
 
-	// removes path from stream files names
-	for _, d := range tempdfs {
-		df := strings.SplitAfterN(d, "/", 3)[2]
-		dfs = append(dfs, df)
+	// check if client wants to save cmd line
+	if save {
+		err := db.AddCmdLine(source, cmd, tempdfs)
+		if err != nil {
+			lp.WLog("Error: failed to insert command line in database")
+			log.Println(err)
+			removeFile(CONF.SD, source)
+		} else {
+			lp.WLog("Transcoding parameters saved")
+		}
+	} else {
+		var dfsl string
+		for i, d := range tempdfs {
+			if i != len(tempdfs)-1 {
+				dfsl += d + " "
+			} else {
+				dfsl += d
+			}
+		}
+		go StartTranscode(source, CONF, cmd, dfsl)
+	}
+}
+
+func StartTranscode(source string, conf cf.Config, cmdg string, dfsl string) {
+	var (
+		err     error
+		cmd     string
+		dfsline string
+		dfs     []string
+		dur     string
+		data    vd.Vidinfo
+	)
+
+	CONF = conf
+
+	// Path to source file
+	sfpath := CONF.SD + source
+
+	// Checks if source file exists
+	if source != "" {
+		if _, err := os.Stat(sfpath); err == nil {
+			lp.WLog("File found")
+		} else if os.IsNotExist(err) {
+			lp.WLog("Error: file does not exist")
+			return
+		} else {
+			log.Println(err)
+			lp.WLog("Error: file may or may not exist")
+			removeFile("videos/", source)
+			return
+		}
+	} else {
+		removeFile("videos/", source)
+		return
+	}
+
+	// Full source file name
+	fullsfname, err := filepath.EvalSymlinks(sfpath)
+	if err != nil {
+		log.Println(err)
+		lp.WLog("Error: failed to get full file name")
+		removeFile("videos/", source)
+		return
+	}
+
+	// Source file name without extension
+	sfnamewe := strings.Split(source, filepath.Ext(fullsfname))[0]
+
+	// If transcoding directory does not exist creat it
+	if _, err = os.Stat(CONF.TD); os.IsNotExist(err) {
+		os.Mkdir(CONF.TD, 0777)
+	}
+
+	// File name after transcoding
+	tempfile := fmt.Sprintf("%v%v.mp4", CONF.TD, sfnamewe)
+
+	// f
+	destinationfile := fmt.Sprintf("%v%v.mp4", CONF.DD, sfnamewe)
+
+	data, err = GetVidInfo("./videos/", source, CONF.TempJson, CONF.DataGen, CONF.TempTxt)
+
+	// ===============================================================
+
+	if cmdg != "" {
+		cmd = cmdg
+		dfsline = dfsl
+	} else {
+		cmd, dfsline, err = db.GetTranscodingInfo(source)
+	}
+
+	tempdfs := strings.Split(dfsline, " ")
+
+	if dfsline != "" {
+		tempfile = tempdfs[0]
+
+		// removes path from stream files names
+		for _, d := range tempdfs {
+			df := strings.SplitAfterN(d, "/", 3)[2]
+			dfs = append(dfs, df)
+		}
 	}
 
 	// Run generated command line
@@ -247,7 +344,7 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 				ndata []vd.Vidinfo
 			)
 			removeFile(CONF.SD, source)
-			for i, _ := range prdata.Streams {
+			for i, _ := range tempdfs {
 				os.Rename(CONF.TD+dfs[i], CONF.DD+dfs[i])
 				nd, err := GetVidInfo(CONF.DD, dfs[i], CONF.TempJson, CONF.DataGen, CONF.TempTxt)
 				if err != nil {
@@ -266,7 +363,7 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 				return
 			}
 
-			msg = fmt.Sprintf("Transcoding coplete, stream name: %v", sfnamewe)
+			msg := fmt.Sprintf("Transcoding coplete, stream name: %v", sfnamewe)
 			lp.WLog(msg)
 
 		} else {
@@ -288,10 +385,11 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 				return
 			}
 
-			msg = fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(tempfile))
+			msg := fmt.Sprintf("Transcoding coplete, file name: %v", filepath.Base(tempfile))
 			lp.WLog(msg)
 		}
 	}
+
 }
 
 func removeFile(path string, filename string) {

@@ -7,6 +7,7 @@ type (
 		VtCodec   string
 		FrameRate float64
 		VtRes     string
+		Save      bool
 		AudioT    []Audio
 		SubtitleT []Sub
 	}

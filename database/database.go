@@ -102,6 +102,41 @@ func UpdateState(name string, state string) error {
 	return nil
 }
 
+func AddCmdLine(name string, cmdline string, filenames []string) error {
+	var (
+		err       error
+		query     string
+		statement *sql.Stmt
+		names     string
+	)
+
+	if len(filenames) < 1 {
+		names = ""
+	} else {
+		for i, fn := range filenames {
+			if i != len(filenames)-1 {
+				names += fn + " "
+			} else {
+				names += fn
+			}
+		}
+	}
+
+	clms := []string{
+		fmt.Sprintf("Cmd_Line='%v'", cmdline),
+		fmt.Sprintf("Dest_Name='%v'", names),
+	}
+	query = getUpdateQuery(clms, "Video", fmt.Sprintf("Name='%v'", name))
+	statement, err = DB.Prepare(query)
+	if err != nil {
+		log.Println("Error query: " + query)
+		return err
+	}
+	statement.Exec()
+
+	return nil
+}
+
 func RemoveRowByName(name string, tname string) error {
 	var (
 		err       error
@@ -272,7 +307,7 @@ func RemoveVideo(name string, stream bool) error {
 			return err
 		}
 		for _, n := range svnames {
-			err = os.Remove(path + n)
+			err = os.Remove(CONF.DD + n)
 			if err != nil {
 				return err
 			}
@@ -471,6 +506,31 @@ func GetPreset(name string) (vd.Preset, error) {
 	}
 
 	return prst, nil
+}
+
+func GetTranscodingInfo(name string) (string, string, error) {
+
+	clms := []string{
+		"Cmd_Line",
+		"Dest_Name",
+	}
+
+	query := getSelectQuery(clms, "Video", fmt.Sprintf("Name='%v'", name))
+	rows, err := DB.Query(query)
+	if err != nil {
+		return "", "", err
+	}
+
+	var (
+		cmd      string
+		destname string
+	)
+
+	for rows.Next() {
+		rows.Scan(&cmd, &destname)
+	}
+
+	return cmd, destname, nil
 }
 
 func getVideoData(vdname string) (vd.Video, string, error) {

@@ -466,20 +466,45 @@ shaka.net.NetworkingEngine.prototype.destroy = function() {};
  * Makes a network request and returns the resulting data.
  * @param {shaka.net.NetworkingEngine.RequestType} type
  * @param {shaka.extern.Request} request
- * @return {!shaka.extern.IAbortableOperation.<shaka.extern.Response>}
+ * @return {!shaka.net.NetworkingEngine.PendingRequest}
  */
 shaka.net.NetworkingEngine.prototype.request = function(type, request) {};
 /**
- * An interface to standardize how objects release internal references
- * synchronously. If an object needs to asynchronously release references, then
- * it should use 'shaka.util.IDestroyable'.
- * @interface
+ * A wrapper class for the number of bytes remaining to be downloaded for the
+ * request.
+ * Instead of using PendingRequest directly, this class is needed to be sent to
+ * plugin as a parameter, and a Promise is returned, before PendingRequest is
+ * created.
  */
-shaka.util.IReleasable = class {
+shaka.net.NetworkingEngine.NumBytesRemainingClass = class {
   /**
-   * Request that this object release all internal references.
+   * Constructor
    */
-  release() {}
+  constructor() {}
+};
+/**
+ * A pending network request. This can track the current progress of the
+ * download, and allows the request to be aborted if the network is slow.
+ * @implements {shaka.extern.IAbortableOperation.<shaka.extern.Response>}
+ * @extends {shaka.util.AbortableOperation}
+ */
+shaka.net.NetworkingEngine.PendingRequest = class extends shaka.util.AbortableOperation {
+  /**
+   * @param {!Promise} promise
+   *   A Promise which represents the underlying operation.  It is resolved when
+   *   the operation is complete, and rejected if the operation fails or is
+   *   aborted.  Aborted operations should be rejected with a shaka.util.Error
+   *   object using the error code OPERATION_ABORTED.
+   * @param {function():!Promise} onAbort
+   *   Will be called by this object to abort the underlying operation.
+   *   This is not cancelation, and will not necessarily result in any work
+   *   being undone.  abort() should return a Promise which is resolved when the
+   *   underlying operation has been aborted.  The returned Promise should never
+   *   be rejected.
+   * @param {shaka.net.NetworkingEngine.NumBytesRemainingClass}
+   *   numBytesRemainingObj
+   */
+  constructor(promise,onAbort,numBytesRemainingObj) {}
 };
 /**
  * Creates a string from the given buffer as UTF-8 encoding.
@@ -513,6 +538,13 @@ shaka.util.StringUtils.fromBytesAutoDetect = function(data) {};
  * @return {!ArrayBuffer}
  */
 shaka.util.StringUtils.toUTF8 = function(str) {};
+/**
+ * Creates a ArrayBuffer from the given string, converting to UTF-16 encoding.
+ * @param {string} str
+ * @param {boolean} littleEndian
+ * @return {!ArrayBuffer}
+ */
+shaka.util.StringUtils.toUTF16 = function(str, littleEndian) {};
 /**
  * Convert a Uint8Array to a base64 string.  The output will always use the
  * alternate encoding/alphabet also known as "base64url".
@@ -554,6 +586,269 @@ shaka.util.Uint8ArrayUtils.equal = function(arr1, arr2) {};
  * @return {!Uint8Array}
  */
 shaka.util.Uint8ArrayUtils.concat = function(...varArgs) {};
+/**
+ * Creates a Cue object.
+ * @param {number} startTime
+ * @param {number} endTime
+ * @param {string} payload
+ * @implements {shaka.extern.Cue}
+ * @constructor
+ * @struct
+ */
+shaka.text.Cue = function(startTime, endTime, payload) {};
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.startTime;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.direction;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.endTime;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.payload;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.region;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.position;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.positionAlign;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.size;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.textAlign;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.writingMode;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.lineInterpretation;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.line;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.lineHeight;
+/**
+   * Line Alignment is set to start by default.
+   * @override
+   */
+shaka.text.Cue.prototype.lineAlign;
+/**
+   * Set the captions at the bottom of the text container by default.
+   * @override
+   */
+shaka.text.Cue.prototype.displayAlign;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.color;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.backgroundColor;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.backgroundImage;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.fontSize;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.fontWeight;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.fontStyle;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.fontFamily;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.textDecoration;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.wrapLine;
+/**
+   * @override
+   */
+shaka.text.Cue.prototype.id;
+/**
+ * @enum {string}
+ */
+shaka.text.Cue.positionAlign = {
+  'LEFT': 'line-left',
+  'RIGHT': 'line-right',
+  'CENTER': 'center',
+  'AUTO': 'auto'
+};
+/**
+ * @enum {string}
+ */
+shaka.text.Cue.textAlign = {
+  'LEFT': 'left',
+  'RIGHT': 'right',
+  'CENTER': 'center',
+  'START': 'start',
+  'END': 'end'
+};
+/**
+ * Vertical alignments of the cues within their extents.
+ * 'BEFORE' means displaying at the top of the captions container box, 'CENTER'
+ *  means in the middle, 'BOTTOM' means at the bottom.
+ * @enum {string}
+ */
+shaka.text.Cue.displayAlign = {
+  'BEFORE': 'before',
+  'CENTER': 'center',
+  'AFTER': 'after'
+};
+/**
+ * @enum {string}
+ */
+shaka.text.Cue.direction = {
+  'HORIZONTAL_LEFT_TO_RIGHT': 'ltr',
+  'HORIZONTAL_RIGHT_TO_LEFT': 'rtl'
+};
+/**
+ * @enum {string}
+ */
+shaka.text.Cue.writingMode = {
+  'HORIZONTAL_TOP_TO_BOTTOM': 'horizontal-tb',
+  'VERTICAL_LEFT_TO_RIGHT': 'vertical-lr',
+  'VERTICAL_RIGHT_TO_LEFT': 'vertical-rl'
+};
+/**
+ * @enum {number}
+ */
+shaka.text.Cue.lineInterpretation = {
+  'LINE_NUMBER': 0,
+  'PERCENTAGE': 1
+};
+/**
+ * @enum {string}
+ */
+shaka.text.Cue.lineAlign = {
+  'CENTER': 'center',
+  'START': 'start',
+  'END': 'end'
+};
+/**
+ * In CSS font weight can be a number, where 400 is normal and 700 is bold.
+ * Use these values for the enum for consistency.
+ * @enum {number}
+ */
+shaka.text.Cue.fontWeight = {
+  'NORMAL': 400,
+  'BOLD': 700
+};
+/**
+ * @enum {string}
+ */
+shaka.text.Cue.fontStyle = {
+  'NORMAL': 'normal',
+  'ITALIC': 'italic',
+  'OBLIQUE': 'oblique'
+};
+/**
+ * @enum {string}
+ */
+shaka.text.Cue.textDecoration = {
+  'UNDERLINE': 'underline',
+  'LINE_THROUGH': 'lineThrough',
+  'OVERLINE': 'overline'
+};
+/**
+ * Creates a CueRegion object.
+ * @implements {shaka.extern.CueRegion}
+ * @constructor
+ * @struct
+ */
+shaka.text.CueRegion = function() {};
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.id;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.viewportAnchorX;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.viewportAnchorY;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.regionAnchorX;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.regionAnchorY;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.width;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.height;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.heightUnits;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.widthUnits;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.viewportAnchorUnits;
+/**
+   * @override
+   */
+shaka.text.CueRegion.prototype.scroll;
+/**
+ * @enum {number}
+ */
+shaka.text.CueRegion.units = {
+  'PX': 0,
+  'PERCENTAGE': 1,
+  'LINES': 2
+};
+/**
+ * @enum {string}
+ */
+shaka.text.CueRegion.scrollMode = {
+  'NONE': '',
+  'UP': 'up'
+};
 /**
  * @param {string} mimeType
  * @param {!shaka.extern.TextParserPlugin} plugin
@@ -1273,7 +1568,7 @@ shaka.hls.HlsParser.prototype.onExpirationUpdated = function(sessionId, expirati
  * @param {string} uri
  * @param {shaka.extern.Request} request
  * @param {shaka.net.NetworkingEngine.RequestType} requestType
- * @param {function(number, number)=} progressUpdated Called when a progress
+ * @param {shaka.extern.ProgressUpdated=} progressUpdated Called when a progress
  *        event happened.
  * @return {!shaka.extern.IAbortableOperation.<shaka.extern.Response>}
  */
@@ -1291,8 +1586,8 @@ shaka.net.HttpFetchPlugin.isSupported = function() {};
  * @param {string} uri
  * @param {shaka.extern.Request} request
  * @param {shaka.net.NetworkingEngine.RequestType} requestType
- * @param {function(number, number)=} progressUpdated Called when a progress
- *        event happened.
+ * @param {shaka.extern.ProgressUpdated=} progressUpdated Called when a
+ *        progress event happened.
  * @return {!shaka.extern.IAbortableOperation.<shaka.extern.Response>}
  */
 shaka.net.HttpXHRPlugin = function(uri, request, requestType, progressUpdated) {};
@@ -1305,269 +1600,6 @@ shaka.net.HttpXHRPlugin = function(uri, request, requestType, progressUpdated) {
  * @return {!shaka.extern.IAbortableOperation.<shaka.extern.Response>}
  */
 shaka.offline.OfflineScheme = function(uri, request, requestType) {};
-/**
- * Creates a Cue object.
- * @param {number} startTime
- * @param {number} endTime
- * @param {string} payload
- * @implements {shaka.extern.Cue}
- * @constructor
- * @struct
- */
-shaka.text.Cue = function(startTime, endTime, payload) {};
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.startTime;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.direction;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.endTime;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.payload;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.region;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.position;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.positionAlign;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.size;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.textAlign;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.writingMode;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.lineInterpretation;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.line;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.lineHeight;
-/**
-   * Line Alignment is set to start by default.
-   * @override
-   */
-shaka.text.Cue.prototype.lineAlign;
-/**
-   * Set the captions at the bottom of the text container by default.
-   * @override
-   */
-shaka.text.Cue.prototype.displayAlign;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.color;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.backgroundColor;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.backgroundImage;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.fontSize;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.fontWeight;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.fontStyle;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.fontFamily;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.textDecoration;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.wrapLine;
-/**
-   * @override
-   */
-shaka.text.Cue.prototype.id;
-/**
- * @enum {string}
- */
-shaka.text.Cue.positionAlign = {
-  'LEFT': 'line-left',
-  'RIGHT': 'line-right',
-  'CENTER': 'center',
-  'AUTO': 'auto'
-};
-/**
- * @enum {string}
- */
-shaka.text.Cue.textAlign = {
-  'LEFT': 'left',
-  'RIGHT': 'right',
-  'CENTER': 'center',
-  'START': 'start',
-  'END': 'end'
-};
-/**
- * Vertical alignments of the cues within their extents.
- * 'BEFORE' means displaying at the top of the captions container box, 'CENTER'
- *  means in the middle, 'BOTTOM' means at the bottom.
- * @enum {string}
- */
-shaka.text.Cue.displayAlign = {
-  'BEFORE': 'before',
-  'CENTER': 'center',
-  'AFTER': 'after'
-};
-/**
- * @enum {string}
- */
-shaka.text.Cue.direction = {
-  'HORIZONTAL_LEFT_TO_RIGHT': 'ltr',
-  'HORIZONTAL_RIGHT_TO_LEFT': 'rtl'
-};
-/**
- * @enum {string}
- */
-shaka.text.Cue.writingMode = {
-  'HORIZONTAL_TOP_TO_BOTTOM': 'horizontal-tb',
-  'VERTICAL_LEFT_TO_RIGHT': 'vertical-lr',
-  'VERTICAL_RIGHT_TO_LEFT': 'vertical-rl'
-};
-/**
- * @enum {number}
- */
-shaka.text.Cue.lineInterpretation = {
-  'LINE_NUMBER': 0,
-  'PERCENTAGE': 1
-};
-/**
- * @enum {string}
- */
-shaka.text.Cue.lineAlign = {
-  'CENTER': 'center',
-  'START': 'start',
-  'END': 'end'
-};
-/**
- * In CSS font weight can be a number, where 400 is normal and 700 is bold.
- * Use these values for the enum for consistency.
- * @enum {number}
- */
-shaka.text.Cue.fontWeight = {
-  'NORMAL': 400,
-  'BOLD': 700
-};
-/**
- * @enum {string}
- */
-shaka.text.Cue.fontStyle = {
-  'NORMAL': 'normal',
-  'ITALIC': 'italic',
-  'OBLIQUE': 'oblique'
-};
-/**
- * @enum {string}
- */
-shaka.text.Cue.textDecoration = {
-  'UNDERLINE': 'underline',
-  'LINE_THROUGH': 'lineThrough',
-  'OVERLINE': 'overline'
-};
-/**
- * Creates a CueRegion object.
- * @implements {shaka.extern.CueRegion}
- * @constructor
- * @struct
- */
-shaka.text.CueRegion = function() {};
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.id;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.viewportAnchorX;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.viewportAnchorY;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.regionAnchorX;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.regionAnchorY;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.width;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.height;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.heightUnits;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.widthUnits;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.viewportAnchorUnits;
-/**
-   * @override
-   */
-shaka.text.CueRegion.prototype.scroll;
-/**
- * @enum {number}
- */
-shaka.text.CueRegion.units = {
-  'PX': 0,
-  'PERCENTAGE': 1,
-  'LINES': 2
-};
-/**
- * @enum {string}
- */
-shaka.text.CueRegion.scrollMode = {
-  'NONE': '',
-  'UP': 'up'
-};
 /**
  * <p>
  * This defines the default text displayer plugin. An instance of this
@@ -1738,6 +1770,11 @@ shaka.Player.prototype.getConfiguration = function() {};
  */
 shaka.Player.prototype.resetConfiguration = function() {};
 /**
+ * Get the current load mode.
+ * @return {shaka.Player.LoadMode}
+ */
+shaka.Player.prototype.getLoadMode = function() {};
+/**
  * Get the media element that the player is currently using to play loaded
  * content. If the player has not loaded content, this will return |null|.
  * @return {HTMLMediaElement}
@@ -1750,34 +1787,33 @@ shaka.Player.prototype.getMediaElement = function() {};
  */
 shaka.Player.prototype.getNetworkingEngine = function() {};
 /**
- * Get the uri to the asset that the player has loaded and is ready to play. If
- * the player has not loaded or is still loading content, this will return
- * |null|.
+ * Get the uri to the asset that the player has loaded. If the player has not
+ * loaded content, this will return |null|.
  * @return {?string}
  */
 shaka.Player.prototype.getAssetUri = function() {};
 /**
- * Get the uri to the asset that the player has loaded and is ready to play. If
- * the player has not loaded or is still loading content, this will return
- * |null|.
+ * Get the uri to the asset that the player has loaded. If the player has not
+ * loaded content, this will return |null|.
+ * @deprecated
  * @return {?string}
  */
 shaka.Player.prototype.getManifestUri = function() {};
 /**
  * Get if the player is playing live content. If the player has not loaded
- * content or is still loading content, this will return |false|.
+ * content, this will return |false|.
  * @return {boolean}
  */
 shaka.Player.prototype.isLive = function() {};
 /**
  * Get if the player is playing in-progress content. If the player has not
- * loaded content or is still loading content, this will return |false|.
+ * loaded content, this will return |false|.
  * @return {boolean}
  */
 shaka.Player.prototype.isInProgress = function() {};
 /**
  * Check if the manifest contains only audio-only content. If the player has not
- * loaded content or is still loading content, this will return |false|.
+ * loaded content, this will return |false|.
  * The player does not support content that contain more than one type of
  * variants (i.e. mixing audio-only, video-only, audio-video). Content will be
  * filtered to only contain one type of variant.
@@ -1786,15 +1822,14 @@ shaka.Player.prototype.isInProgress = function() {};
 shaka.Player.prototype.isAudioOnly = function() {};
 /**
  * Get the range of time (in seconds) that seeking is allowed. If the player has
- * not loaded content or is still loading content, this will return a range from
- * 0 to 0.
+ * not loaded content, this will return a range from 0 to 0.
  * @return {{start: number, end: number}}
  */
 shaka.Player.prototype.seekRange = function() {};
 /**
  * Get the key system currently used by EME. If EME is not being used, this will
- * return an empty string. If the player has not loaded content or is still
- * loading content, this will return an empty string.
+ * return an empty string. If the player has not loaded content, this will
+ * return an empty string.
  * @return {string}
  */
 shaka.Player.prototype.keySystem = function() {};
@@ -1808,15 +1843,15 @@ shaka.Player.prototype.drmInfo = function() {};
 /**
  * Get the next known expiration time for any EME session. If the session never
  * expires, this will return |Infinity|. If there are no EME sessions, this will
- * return |Infinity|. If the player has not loaded content or is still loading
- * content, this will return |Infinity|.
+ * return |Infinity|. If the player has not loaded content, this will return
+ * |Infinity|.
  * @return {number}
  */
 shaka.Player.prototype.getExpiration = function() {};
 /**
  * Check if the player is currently in a buffering state (has too little content
- * to play smoothly). If the player has not loaded content or is still loading
- * content, this will return |false|.
+ * to play smoothly). If the player has not loaded content, this will return
+ * |false|.
  * @return {boolean}
  */
 shaka.Player.prototype.isBuffering = function() {};
@@ -1824,8 +1859,8 @@ shaka.Player.prototype.isBuffering = function() {};
  * Get the playback rate of what is playing right now. If we are using trick
  * play, this will return the trick play rate. If no content is playing, this
  * will return 0. If content is buffering, this will return 0.
- * If the player has not loaded content or is still loading content, this will
- * return a playback rate of |0|.
+ * If the player has not loaded content, this will return a playback rate of
+ * |0|.
  * @return {number}
  */
 shaka.Player.prototype.getPlaybackRate = function() {};
@@ -1849,8 +1884,7 @@ shaka.Player.prototype.cancelTrickPlay = function() {};
  * Return a list of variant tracks that can be switched to in the current
  * period. If there are multiple periods, you must seek to the period in order
  * to get variants from that period.
- * If the player has not loaded content or is still loading content, this will
- * return an empty list.
+ * If the player has not loaded content, this will return an empty list.
  * @return {!Array.<shaka.extern.Track>}
  */
 shaka.Player.prototype.getVariantTracks = function() {};
@@ -1858,33 +1892,34 @@ shaka.Player.prototype.getVariantTracks = function() {};
  * Return a list of text tracks that can be switched to in the current period.
  * If there are multiple periods, you must seek to a period in order to get
  * text tracks from that period.
- * If the player has not loaded content or is still loading content, this will
- * return an empty list.
+ * If the player has not loaded content, this will return an empty list.
  * @return {!Array.<shaka.extern.Track>}
  */
 shaka.Player.prototype.getTextTracks = function() {};
 /**
  * Select a specific text track from the current period. |track| should come
  * from a call to |getTextTracks|. If the track is not found in the current
- * period, this will be a no-op. If the player has not loaded content or is
- * still loading content, this will be a no-op.
+ * period, this will be a no-op. If the player has not loaded content, this will
+ * be a no-op.
  * Note that AdaptationEvents are not fired for manual track selections.
  * @param {shaka.extern.Track} track
  */
 shaka.Player.prototype.selectTextTrack = function(track) {};
 /**
  * Find the CEA 608/708 text stream embedded in video, and switch to it.
+ * @deprecated
  */
 shaka.Player.prototype.selectEmbeddedTextTrack = function() {};
 /**
  * @return {boolean} True if we are using any embedded text tracks present.
+ * @deprecated
  */
 shaka.Player.prototype.usingEmbeddedTextTrack = function() {};
 /**
  * Select a specific variant track to play from the current period. |track|
  * should come from a call to |getVariantTracks|. If |track| cannot be found
  * in the current variant, this will be a no-op. If the player has not loaded
- * content or is loading content, this will be a no-op.
+ * content, this will be a no-op.
  * Changing variants will take effect once the currently buffered content has
  * been played. To force the change to happen sooner, use |clearBuffer| with
  * |safeMargin|. Setting |clearBuffer| to |true| will clear all buffered content
@@ -1902,36 +1937,34 @@ shaka.Player.prototype.usingEmbeddedTextTrack = function() {};
 shaka.Player.prototype.selectVariantTrack = function(track, clearBuffer, safeMargin) {};
 /**
  * Return a list of audio language-role combinations available for the current
- * period. If the player has not loaded any content or is loading content, this
- * will return an empty list.
+ * period. If the player has not loaded any content, this will return an empty
+ * list.
  * @return {!Array.<shaka.extern.LanguageRole>}
  */
 shaka.Player.prototype.getAudioLanguagesAndRoles = function() {};
 /**
  * Return a list of text language-role combinations available for the current
- * period. If the player has not loaded any content or is loading content, this
- * will be return an empty list.
+ * period. If the player has not loaded any content, this will be return an
+ * empty list.
  * @return {!Array.<shaka.extern.LanguageRole>}
  */
 shaka.Player.prototype.getTextLanguagesAndRoles = function() {};
 /**
  * Return a list of audio languages available for the current period. If the
- * player has not loaded any content or is loading content, this will return an
- * empty list.
+ * player has not loaded any content, this will return an empty list.
  * @return {!Array.<string>}
  */
 shaka.Player.prototype.getAudioLanguages = function() {};
 /**
  * Return a list of text languages available for the current period. If the
- * player has not loaded any content or is loading content, this will return an
- * empty list.
+ * player has not loaded any content, this will return an empty list.
  * @return {!Array.<string>}
  */
 shaka.Player.prototype.getTextLanguages = function() {};
 /**
  * Sets currentAudioLanguage and currentVariantRole to the selected language and
  * role, and chooses a new variant if need be. If the player has not loaded any
- * content or is loading content, this will be a no-op.
+ * content, this will be a no-op.
  * @param {string} language
  * @param {string=} role
  */
@@ -1939,23 +1972,19 @@ shaka.Player.prototype.selectAudioLanguage = function(language, role) {};
 /**
  * Sets currentTextLanguage and currentTextRole to the selected language and
  * role, and chooses a new variant if need be. If the player has not loaded any
- * content or is loading content, this will be a no-op.
+ * content, this will be a no-op.
  * @param {string} language
  * @param {string=} role
  */
 shaka.Player.prototype.selectTextLanguage = function(language, role) {};
 /**
- * Check if the player will be trying to display text. While in an unloaded
- * state, this will always return |false|. If content has been loaded, but there
- * are no text tracks, this will return if text would be visible if there was
- * text tracks.
+ * Check if the text displayer is enabled.
  * @return {boolean}
  */
 shaka.Player.prototype.isTextTrackVisible = function() {};
 /**
- * Tell the player if it should show text once it has text to show. If the
- * player has not loaded any content, the request will be applied next time
- * content is loaded.
+ * Enable or disable the text displayer.  If the player is in an unloaded state,
+ * the request will be applied next time content is loaded.
  * @param {boolean} isVisible
  * @return {!Promise}
  */
@@ -1963,14 +1992,14 @@ shaka.Player.prototype.setTextTrackVisibility = function(isVisible) {};
 /**
  * Get the current playhead position as a date. This should only be called when
  * the player has loaded a live stream. If the player has not loaded a live
- * stream or is still loading content, this will return |null|.
+ * stream, this will return |null|.
  * @return {Date}
  */
 shaka.Player.prototype.getPlayheadTimeAsDate = function() {};
 /**
  * Get the presentation start time as a date. This should only be called when
  * the player has loaded a live stream. If the player has not loaded a live
- * stream or is still loading content, this will return |null|.
+ * stream, this will return |null|.
  * @return {Date}
  */
 shaka.Player.prototype.getPresentationStartTimeAsDate = function() {};
@@ -2027,6 +2056,29 @@ shaka.Player.prototype.retryStreaming = function() {};
  */
 shaka.Player.prototype.getManifest = function() {};
 /**
+ * Get the type of manifest parser that the player is using. If the player has
+ * not loaded any content, this will return |null|.
+ * @return {?shaka.extern.ManifestParser.Factory}
+ */
+shaka.Player.prototype.getManifestParserFactory = function() {};
+/**
+ * In order to know what method of loading the player used for some content, we
+ * have this enum. It lets us know if content has not been loaded, loaded with
+ * media source, or loaded with src equals.
+ * This enum has a low resolution, because it is only meant to express the
+ * outer limits of the various states that the player is in. For example, when
+ * someone calls a public method on player, it should not matter if they have
+ * initialized drm engine, it should only matter if they finished loading
+ * content.
+ * @enum {number}
+ */
+shaka.Player.LoadMode = {
+  'DESTROYED': 0,
+  'NOT_LOADED': 1,
+  'MEDIA_SOURCE': 2,
+  'SRC_EQUALS': 3
+};
+/**
  * This manages persistent offline data including storage, listing, and deleting
  * stored manifests.  Playback of offline manifests are done through the Player
  * using a special URI (see shaka.offline.OfflineUri).
@@ -2066,6 +2118,13 @@ shaka.offline.Storage.prototype.destroy = function() {};
  */
 shaka.offline.Storage.prototype.configure = function(config) {};
 /**
+ * Return a copy of the current configuration.  Modifications of the returned
+ * value will not affect the Storage instance's active configuration.  You must
+ * call storage.configure() to make changes.
+ * @return {shaka.extern.PlayerConfiguration}
+ */
+shaka.offline.Storage.prototype.getConfiguration = function() {};
+/**
  * Return the networking engine that storage is using. If storage was
  * initialized with a player instance, then the networking engine returned
  * will be the same as |player.getNetworkingEngine()|.
@@ -2094,6 +2153,11 @@ shaka.offline.Storage.prototype.getNetworkingEngine = function() {};
  *   The "appMetadata" member is the appMetadata argument you passed to store().
  */
 shaka.offline.Storage.prototype.store = function(uri, appMetadata, mimeType) {};
+/**
+ * Returns true if an asset is currently downloading.
+ * @return {boolean}
+ */
+shaka.offline.Storage.prototype.getStoreInProgress = function() {};
 /**
  * Removes the given stored content.  This will also attempt to release the
  * licenses, if any.
