@@ -2,4 +2,4 @@ videos/*
 !videos/.gitkeep
 info.log
 data.db
-views/shaka-player
+views/shaka-player/
