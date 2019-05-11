@@ -1,5 +1,5 @@
+views/shaka-player/*
 videos/*
 !videos/.gitkeep
 info.log
 data.db
-views/shaka-player/
