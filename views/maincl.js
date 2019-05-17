@@ -1,5 +1,7 @@
 'use strict';
 
+window.onload = sse();
+
 var save = false;
 
 function upload(event) {

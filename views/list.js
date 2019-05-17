@@ -22,6 +22,11 @@ function list() {
                 var newListItem = document.createElement('div');
                 newListItem.id = `list-item-${i}`;
                 newListItem.className = 'list-item';
+                var vinfo = document.createElement('div');
+                vinfo.style.display = 'none';
+                vinfo.id = `vd-info-${i}`;
+                vinfo.className = 'vd-info';
+
                 var tempspan = document.createElement('span');
                 tempspan.id = `file-status-${i}`;
                 tempspan.className = 'list-item-status';
@@ -30,6 +35,11 @@ function list() {
                 temph4.id = `file-name-${i}`;
                 temph4.className = 'file-name';
                 temph4.innerHTML = d['StreamName'];
+                var tempib = document.createElement('button');
+                tempib.innerHTML = 'Info';
+                tempib.type = 'button';
+                tempib.className = 'list-item-button';
+                tempib.setAttribute('onclick', `showvidinfo(${i})`)
                 var tempa = document.createElement('a');
                 tempa.id = `watch-button-${i}`;
                 var tempbt = document.createElement('button');
@@ -51,15 +61,22 @@ function list() {
                 tempa.appendChild(tempbt);
                 tempa.appendChild(tempdbt);
                 tempa.appendChild(tempebt);
+                tempa.appendChild(tempib);
                 newListItem.appendChild(tempspan);
                 newListItem.appendChild(temph4);
                 newListItem.appendChild(tempa);
 
                 document.getElementById('list').appendChild(newListItem);
+                document.getElementById('list').appendChild(vinfo);
             } else {
                 var newListItem = document.createElement('div');
                 newListItem.id = `list-item-${i}`;
                 newListItem.className = 'list-item';
+                var vinfo = document.createElement('div');
+                vinfo.style.display = 'none';
+                vinfo.id = `vd-info-${i}`;
+                vinfo.className = 'vd-info';
+
                 var tempspan = document.createElement('span');
                 tempspan.id = `file-status-${i}`;
                 tempspan.className = 'list-item-status';
@@ -68,6 +85,11 @@ function list() {
                 temph4.id = `file-name-${i}`;
                 temph4.className = 'file-name';
                 temph4.innerHTML = d['Video'][0].FileName;
+                var tempib = document.createElement('button');
+                tempib.innerHTML = 'Info';
+                tempib.type = 'button';
+                tempib.className = 'list-item-button';
+                tempib.setAttribute('onclick', `showvidinfo(${i})`)
                 var tempa = document.createElement('a');
                 tempa.id = `watch-button-${i}`;
                 var tempbt = document.createElement('button');
@@ -98,11 +120,13 @@ function list() {
                 }
                 tempa.appendChild(tempdbt);
                 tempa.appendChild(tempebt);
+                tempa.appendChild(tempib);
                 newListItem.appendChild(tempspan);
                 newListItem.appendChild(temph4);
                 newListItem.appendChild(tempa);
 
                 document.getElementById('list').appendChild(newListItem);
+                document.getElementById('list').appendChild(vinfo);
             }
         });
 
@@ -110,6 +134,66 @@ function list() {
     .catch(function (error) {
         console.log(error);
     })
+}
+
+var showing = false
+
+function showvidinfo(i) {
+    var vinfodiv = document.getElementById(`vd-info-${i}`);
+    if (showing == true) {
+        vinfodiv.style.display = 'none';
+        vinfodiv.innerHTML = '';
+        showing = false;
+        return
+    }
+    showing = true
+
+    var name = document.getElementById(`file-name-${i}`).innerHTML;
+    var th4 = document.createElement('h4');
+    th4.className = 'vd-info-text';
+
+    axios.get('/vd')
+        .then(function (response) {
+            var info='';
+            data = response.data['VideoStream'];
+            data.map((str, j) => {
+                if (str['Stream'] && str['StreamName'] == name) {
+                    str['Video'].map((d, i) => {
+                        info += `
+                        ${i+1} Video Name: ${d['FileName']}
+                        <br>
+                        Video Codec: ${d['VtCodec']}, 
+                        Audio Codec: ${d['AudioT'][0]['AtCodec']},
+                        Frame Rate: ${d['FrameRate']},
+                        Resolution: ${d['VtRes']}
+                        <br><br>
+                        `;
+
+                        console.log("1");
+                    });
+                } else if (!str['Stream'] && str['Video'][0]['FileName'] == name) {
+                    info = `
+                    Video Name: ${str['Video'][0]['FileName']}
+                    <br>
+                    Video Codec: ${str['Video'][0]['VtCodec']}, 
+                    Audio Codec: ${str['Video'][0]['AudioT'][0]['AtCodec']},
+                    Frame Rate: ${str['Video'][0]['FrameRate']},
+                    Resolution: ${str['Video'][0]['VtRes']}
+                    <br><br>
+                    `;
+                    console.log("2");
+                }
+            });
+
+            th4.innerHTML = info;
+            vinfodiv.appendChild(th4);
+            vinfodiv.style.display = 'block';
+        })
+        .catch(function (error) {
+            console.log(error)
+            // handle error
+        });
+
 }
 
 function transcode(i) {
@@ -127,7 +211,16 @@ function delet(i, stream) {
     }
 }
 
+var updating = false;
+
 function update(i, stream) {
+    if (updating == true) {
+        updating = false;
+        var updateForm = document.getElementById(`item-update-${i}`);
+        updateForm.parentNode.removeChild(updateForm);
+        return
+    }
+    updating = true;
     var listItem = document.getElementById(`list-item-${i}`);
     var updateForm = document.createElement('form');
     updateForm.id = `item-update-${i}`;
@@ -136,6 +229,7 @@ function update(i, stream) {
     var submit = document.createElement('input');
     submit.type = 'submit';
     submit.value = 'Submit';
+    submit.className = "list-item-button";
     submit.setAttribute('onclick', `setvalue(${i}, ${stream})`);
 
     updateForm.appendChild(inputField);

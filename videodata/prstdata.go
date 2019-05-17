@@ -23,6 +23,12 @@ type (
 	}
 )
 
+type VfNPrd struct {
+	PData PData
+	Video Video
+	Err   error
+}
+
 type Preset struct {
 	Resolution string
 	Codec      string

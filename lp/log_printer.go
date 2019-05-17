@@ -7,9 +7,9 @@ import (
 
 var LogFile *os.File
 
-func WLog(msg string) {
+func WLog(msg string, clid string) {
 	log.Println(msg)
-	UpdateLogMessage(msg)
+	UpdateLogMessage(msg, clid)
 }
 
 func OpenLogFile(filepath string) error {

@@ -10,7 +10,7 @@ DD = "videos/transcoded/"
 # If true debug transcoder by transcoding only interval between DebugStart-DebugEnd
 Debug = true
 DebugStart = "00:00:00"
-DebugEnd = "00:01:00"
+DebugEnd = "00:02:00"
 
 # Temporay json file path and name for generate_data.py
 TempJson = "transcode/temp.json"
@@ -30,7 +30,7 @@ LogP = "info.log"
 
 # If Advanced true but Presets false then using advanced transcoder based on client choices
 Advanced = true
-# If Advanced and Presets set to true use Presets
+# If Advanced and Presets set to true use Presets as default
 Presets = true
 
 # Available file formats to be uploaded

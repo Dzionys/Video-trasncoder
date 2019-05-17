@@ -332,7 +332,7 @@ func generateBaseCmdLine(d vd.Vidinfo, sf string, df string, sfname string) stri
 
 	// Add all parts in one command line
 	cmd = fmt.Sprintf("ffmpeg -i %v %v %v %v %v %v %v -async 1 -vsync 1 %v", sf, ss, mapping, frate, vcode, acode, scode, df)
-	lp.WLog("Command line generated")
+	lp.WLog("Command line generated", "")
 
 	return cmd
 }

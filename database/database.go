@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -78,6 +79,17 @@ func OpenDatabase() error {
 	_, err = statement.Exec()
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func IsExist(tname string, name string) error {
+	i, err := getIdByName(tname, name)
+	if err != nil {
+		return err
+	} else if i == -1 {
+		return errors.New("video not found")
 	}
 
 	return nil
@@ -634,6 +646,8 @@ func GetAllStreamVideos(sname string) ([]string, error) {
 	id, err := getIdByName("Stream", sname)
 	if err != nil {
 		return names, err
+	} else if id == -1 {
+		return names, errors.New("no such column in database")
 	}
 
 	clms := []string{

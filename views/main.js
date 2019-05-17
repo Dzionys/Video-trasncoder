@@ -1,10 +1,13 @@
 'use strict';
 
+window.onload = sse();
+
 var formGroupCount = 1;
 var save = false;
 
 var formGroup = document.getElementsByClassName('form-group')[0];
 var buttonAdd = document.getElementById('button-add');
+var buttonRemove = document.getElementById('button-remove');
 var add = document.getElementById('form-group-add');
 
 function addFormGroup(add, formGroup, i) {
@@ -183,6 +186,32 @@ function transcode(event) {
       localStorage.removeItem('streampattern');
       localStorage.removeItem('video');
       transcodeForm.className = 'transcode-form';
+
+      //=====================================
+
+      // var fga = document.getElementById('form-group-add');
+      // while(fga.childNodes.length > 1) {
+      //   fga.removeChild(fga.lastChild);
+      // }
+
+      // var vdpr = document.getElementById('video-presets-1');
+      // while (vdpr.firstChild) {
+      //   vdpr.removeChild(vdpr.firstChild)
+      // }
+      // var adpr = document.getElementById('audio-presets-1');
+      // while (adpr.firstChild) {
+      //   adpr.removeChild(adpr.firstChild)
+      // }
+      // var asct = document.getElementById('audio-select-1');
+      // while (asct.firstChild) {
+      //   asct.removeChild(asct.firstChild)
+      // }
+      // var ssct = document.getElementById('subtitle-select-1');
+      // while (ssct.firstChild) {
+      //   ssct.removeChild(ssct.firstChild)
+      // }
+
+      // formGroupCount = 1;
     })
     .catch(function (error) {
       console.log(error)
@@ -191,6 +220,21 @@ function transcode(event) {
 
   event.preventDefault();
 }
+
+function removeFormGroup(i) {
+  if (i == 1) {
+    return
+  }
+  var formgroup = document.getElementsByClassName('form-group')[i-1];
+  formgroup.parentNode.removeChild(formgroup);
+
+  formGroupCount--;
+}
+
+buttonRemove.addEventListener('click', function(event) {
+  removeFormGroup(formGroupCount);
+  event.preventDefault();
+})
 
 buttonAdd.addEventListener('click', function(event) {
   formGroupCount++;
@@ -203,5 +247,4 @@ transcodeForm.addEventListener('submit', transcode);
 buttonSave.addEventListener('click', function(event) {
   save = true;
   transcode(event);
-  console.log('gay');
 });

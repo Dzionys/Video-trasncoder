@@ -8,33 +8,45 @@ import (
 )
 
 type Broker struct {
-	Clients        map[chan string]bool
-	NewClients     chan chan string
+	Clients        map[chan string]string
+	NewClients     chan Client
 	DefunctClients chan chan string
-	Messages       chan string
+	Messages       chan Message
 }
 
-var B *Broker
+type Client struct {
+	ClientChannel chan string
+	ClientId      string
+}
+
+type Message struct {
+	Msg      string
+	ClientId string
+}
+
+var (
+	B       *Broker
+	started = false
+)
 
 func (b *Broker) Start() {
+	started = true
 	go func() {
 		for {
 			select {
 			case s := <-b.NewClients:
 				// start sending client messages
-				b.Clients[s] = true
-				log.Println("Added new client")
+				b.Clients[s.ClientChannel] = s.ClientId
 
 			case s := <-b.DefunctClients:
 				// stop sending client messages
 				delete(b.Clients, s)
 				close(s)
-				log.Println("Removed client")
 
 			case msg := <-b.Messages:
 				// there is a new message to send to all clients
-				for s := range b.Clients {
-					s <- msg
+				for s, _ := range b.Clients {
+					s <- msg.Msg
 				}
 				// log.Printf("Broadcast message to %d clients", len(b.Clients))
 			}
@@ -54,7 +66,11 @@ func (b *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	messageChan := make(chan string)
 
 	// Add this client to the map of those that should receive updates
-	b.NewClients <- messageChan
+	client := Client{
+		messageChan,
+		r.RemoteAddr,
+	}
+	b.NewClients <- client
 
 	// Listen to the closing of the http connection
 	notify := w.(http.CloseNotifier).CloseNotify()
@@ -90,10 +106,26 @@ func (b *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateMessage(msg string) {
-	B.Messages <- msg
+	if !started {
+		log.Println("SSE has not been server started")
+		return
+	}
+	message := Message{
+		msg,
+		"",
+	}
+	B.Messages <- message
 }
 
-func UpdateLogMessage(msg string) {
+func UpdateLogMessage(msg string, clid string) {
+	if !started {
+		log.Println("SSE has not been server started")
+		return
+	}
 	curentTime := time.Now().Format("15:04:05")
-	B.Messages <- fmt.Sprintf("<%v> %v", curentTime, msg)
+	message := Message{
+		fmt.Sprintf("<%v> %v", curentTime, msg),
+		clid,
+	}
+	B.Messages <- message
 }

@@ -1,5 +1,3 @@
-window.onload = sse();
-
 var inputFile = document.getElementById('input-file');
 var transcodeSubmit = document.getElementById('transcode-submit');
 var buttonSave = document.getElementById('button-save');
@@ -16,6 +14,8 @@ var framerate = document.getElementById('frame-rate');
 var audioTracks = document.getElementById('audio-tracks');
 var subtitleTracks = document.getElementById('subtitle-tracks');
 
+media.dash.enabled;
+
 function sse() {
   var source = new EventSource('/sse/dashboard');
   console.log("Connection to /sse/dashboard established")
@@ -24,7 +24,7 @@ function sse() {
 
   source.onmessage = function(event) {
     if (!event.data.startsWith('<')) {
-      logg += '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br>';
+      //logg += '<span class="user">user@transcoder</span>:<span class="home">~</span>$ video-transcode ' + event.data + '<br>';
       localStorage.setItem('filename', event.data)
       document.getElementById('filename').innerText = `${event.data}, `;
     } else if (event.data.startsWith('videouri')) {
@@ -46,6 +46,10 @@ function sse() {
 
     document.getElementById('console').innerHTML = logg;
   };
+
+  source.onerror = function(event) {
+    console.log("Event Source failed.")
+  }
 }
 
 function resetUplodForm() {
@@ -65,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
   var _selector = document.querySelector('input[name=checkbox]');
   _selector.addEventListener('change', function (event) {
     var data = {
-      "tc": true
+      "Tc": "true"
     }
     if (_selector.checked) {
       axios.post('/tctype', data)
@@ -76,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
           // handle error
         })
     } else {
-      data.tc = false;
+      data.Tc = "false";
       axios.post('/tctype', data)
         .then(function (response) {
         })

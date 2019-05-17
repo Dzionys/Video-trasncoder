@@ -3,7 +3,7 @@
 h1 {
   text-align: center;
   font-size: 3rem;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
   color: rgb(194, 194, 194);
   font-weight: normal;
   font-family: 'Monoton', cursive;
@@ -70,6 +70,8 @@ div#main {
   box-sizing: border-box;
   overflow-y: scroll;
   transition: 500ms;
+  align-items: center;
+  justify-content: center;
 }
 
 #console span.user {
@@ -96,7 +98,7 @@ body {
 }
 
 body,
-.upload-form-label {
+.upload-form-label, .buttonss, .player {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -358,7 +360,7 @@ input:checked + .slider:before {
   font-weight: bold;
 }
 
-.list-item-button, .list-item-watch {
+.list-item-button, .list-item-watch, .button {
   padding: 0.65rem;
   color: #172C64;
   transition: transform .4s;
@@ -383,4 +385,18 @@ input:checked + .slider:before {
   transform: scale(1.01);
   color: #8eb8e5;
   background-color: #172C64;
+}
+
+.vd-info {
+  background-color: #7c99b4;
+  margin: 0.5rem;
+  border-radius: 2px;
+  line-height: 10px;
+  text-align: center;
+}
+
+.vd-info-text {
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 18px;
 }

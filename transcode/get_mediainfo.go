@@ -27,12 +27,16 @@ func GetMediaInfoJson(source string, wg *sync.WaitGroup) ([]byte, error) {
 	parts = parts[1:len(parts)]
 
 	out, err := exec.Command(head, parts...).Output()
-	if err != nil {
-		return out, err
+
+	ej := `{
+
+	}`
+	if string(out) == ej {
+		return out, errors.New("json data is empty")
 	}
 
-	if fmt.Sprintf("%s", out) == "" {
-		return out, errors.New("json data is empty")
+	if err != nil {
+		return out, err
 	}
 
 	//checks if data is json file
@@ -63,7 +67,7 @@ func generateDataFile(wg *sync.WaitGroup, gpath string) error {
 	return nil
 }
 
-func GetVidInfo(path string, filename string, tempjson string, datagen string, tempdata string) (vd.Vidinfo, error) {
+func GetVidInfo(path string, filename string, tempjson string, datagen string, tempdata string, clid string) (vd.Vidinfo, error) {
 	var (
 		wg sync.WaitGroup
 		vi vd.Vidinfo
@@ -73,8 +77,8 @@ func GetVidInfo(path string, filename string, tempjson string, datagen string, t
 	wg.Add(1)
 	infob, err := GetMediaInfoJson(path+filename, &wg)
 	if err != nil {
-		lp.WLog("Error: could not get json data from file")
-		removeFile(path, filename)
+		lp.WLog("Error: could not get json data from file", clid)
+		removeFile(path, filename, clid)
 		return vi, err
 	}
 	wg.Wait()
@@ -84,14 +88,14 @@ func GetVidInfo(path string, filename string, tempjson string, datagen string, t
 	json.Unmarshal(infob, &raw)
 	info, err := json.Marshal(raw)
 	if err != nil {
-		lp.WLog("Error: failed to marshal json file")
-		removeFile(path, filename)
+		lp.WLog("Error: failed to marshal json file", clid)
+		removeFile(path, filename, clid)
 		return vi, err
 	}
 	err = ioutil.WriteFile(tempjson, info, 0666)
 	if err != nil {
-		lp.WLog("Error: could not create json file")
-		removeFile(path, filename)
+		lp.WLog("Error: could not create json file", clid)
+		removeFile(path, filename, clid)
 		return vi, err
 	}
 
@@ -102,8 +106,8 @@ func GetVidInfo(path string, filename string, tempjson string, datagen string, t
 	wg.Wait()
 	if err != nil {
 		log.Println(err)
-		lp.WLog("Error: failed to generate video data")
-		removeFile(path, filename)
+		lp.WLog("Error: failed to generate video data", clid)
+		removeFile(path, filename, clid)
 		return vi, err
 	}
 
@@ -111,8 +115,8 @@ func GetVidInfo(path string, filename string, tempjson string, datagen string, t
 	vi, err = ParseFile(tempdata)
 	if err != nil || vi.IsEmpty() {
 		log.Println(err)
-		lp.WLog("Error: failed parsing data file")
-		removeFile(path, filename)
+		lp.WLog("Error: failed parsing data file", clid)
+		removeFile(path, filename, clid)
 		return vi, err
 	}
 

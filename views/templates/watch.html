@@ -10,15 +10,22 @@
     <script src="watch.js"></script>
 </head>
 <body>
-    <video id="video"
-            width="640"
-            controls autoplay>
-    </video>
-    <a href="/upload">
-        <button type="button">Upload File</button>
-    </a>
-    <a href="/list">
-        <button type="button">List</button>
-    </a>
+    <div class="container">
+        <h1>Video Player</h1>
+        <div class="player" >
+            <video id="video"
+                    width="640"
+                    controls autoplay>
+            </video>
+        </div>
+        <div class="buttonss">
+            <a href="/upload">
+                <button class="button" type="button">Upload File</button>
+            </a>
+            <a href="/list">
+                <button class="button" type="button">List</button>
+            </a>
+        </div>
+    </div>
 </body>
 </html>
