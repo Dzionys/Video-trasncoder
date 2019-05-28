@@ -1,5 +1,4 @@
 views/shaka-player/*
-views/mux.js/
 videos/*
 !videos/.gitkeep
 info.log

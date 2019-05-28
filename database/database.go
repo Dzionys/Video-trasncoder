@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 
 	vd "../videodata"
@@ -393,6 +394,10 @@ func UpdateVideoName(upname string, oname string, stream bool) error {
 			path = CONF.DD
 		} else {
 			path = CONF.SD
+		}
+
+		if filepath.Ext(upname) != ".mp4" {
+			upname += ".mp4"
 		}
 
 		oldp := path + oname

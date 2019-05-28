@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/mux"
@@ -374,12 +375,17 @@ func vidUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if updata.Utype == 2 {
-		err = db.UpdateVideoName(updata.Data, updata.Odata, updata.Stream)
+		newName := strings.Split(updata.Data, "/")[0]
+		oldName := strings.Split(updata.Data, "/")[1]
+
+		err = db.UpdateVideoName(newName, oldName, updata.Stream)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(500)
 			w.Write([]byte("error: failed to update video name"))
 			return
+		} else {
+			w.Write([]byte("video name updated successfully"))
 		}
 	} else if updata.Utype == 1 {
 		err = db.RemoveVideo(updata.Data, updata.Stream)
@@ -388,19 +394,28 @@ func vidUpdateHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			w.Write([]byte("error: failed to remove video(s)"))
 			return
+		} else {
+			w.Write([]byte("video deleted successfully"))
 		}
 	} else if updata.Utype == 3 {
 		if updata.Data == "" {
 			w.WriteHeader(422)
 			w.Write([]byte("error: video name has not been provided"))
+			return
 		} else if !FileExist(updata.Data) {
 			w.WriteHeader(404)
 			w.Write([]byte(fmt.Sprintf("error: video: %v not found", updata.Data)))
+			return
 		}
 		go tc.StartTranscode(updata.Data, CONF, "", "", r.RemoteAddr)
+	} else if updata.Utype == 0 {
+		w.WriteHeader(415)
+		w.Write([]byte("error: JSON file is not valid or wrong format"))
+		return
 	} else {
-		w.WriteHeader(404)
-		w.Write([]byte("error: unsupported update type"))
+		w.WriteHeader(422)
+		w.Write([]byte("error: unsupported update number " + string(updata.Utype)))
+		return
 	}
 }
 

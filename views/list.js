@@ -8,11 +8,17 @@ function list() {
         data = response.data['VideoStream'];
 
         if (data == null) {
+            var item = document.createElement('div');
+                item.id = 'list-item-0';
+                item.className = 'list-item';
             var temph4 = document.createElement('h4');
                 temph4.id = 'file-name';
                 temph4.className = 'file-name';
                 temph4.innerHTML = 'No videos';
                 document.getElementById('list').appendChild(temph4);
+
+                item.appendChild(temph4);
+                document.getElementById('list').appendChild(item);
 
                 return;
         }
@@ -35,6 +41,11 @@ function list() {
                 temph4.id = `file-name-${i}`;
                 temph4.className = 'file-name';
                 temph4.innerHTML = d['StreamName'];
+                var sucbt = document.createElement('button');
+                sucbt.innerHTML = 'Copy link';
+                sucbt.type = 'button';
+                sucbt.className = 'list-item-button';
+                sucbt.setAttribute('onclick', `copyurl(${i})`);
                 var tempib = document.createElement('button');
                 tempib.innerHTML = 'Info';
                 tempib.type = 'button';
@@ -58,9 +69,12 @@ function list() {
                 tempebt.innerHTML = 'Edit';
                 tempebt.setAttribute('onclick', `update(${i}, true)`);
 
+                tempa.appendChild(sucbt);
+                if (d['State'] != "Transcoding") {
+                    tempa.appendChild(tempebt);
+                }
                 tempa.appendChild(tempbt);
                 tempa.appendChild(tempdbt);
-                tempa.appendChild(tempebt);
                 tempa.appendChild(tempib);
                 newListItem.appendChild(tempspan);
                 newListItem.appendChild(temph4);
@@ -85,6 +99,11 @@ function list() {
                 temph4.id = `file-name-${i}`;
                 temph4.className = 'file-name';
                 temph4.innerHTML = d['Video'][0].FileName;
+                var sucbt = document.createElement('button');
+                sucbt.innerHTML = 'Copy link';
+                sucbt.type = 'button';
+                sucbt.className = 'list-item-button';
+                sucbt.setAttribute('onclick', `copyurl(${i})`);
                 var tempib = document.createElement('button');
                 tempib.innerHTML = 'Info';
                 tempib.type = 'button';
@@ -115,11 +134,12 @@ function list() {
                 tempebt.innerHTML = 'Edit';
                 tempebt.setAttribute('onclick', `update(${i}, false)`);
 
+                tempa.appendChild(sucbt);
                 if (d['State'] != "Transcoding") {
                     tempa.appendChild(tempbt);
+                    tempa.appendChild(tempebt);
                 }
                 tempa.appendChild(tempdbt);
-                tempa.appendChild(tempebt);
                 tempa.appendChild(tempib);
                 newListItem.appendChild(tempspan);
                 newListItem.appendChild(temph4);
@@ -134,6 +154,23 @@ function list() {
     .catch(function (error) {
         console.log(error);
     })
+}
+
+function copyurl(i) {
+    var nginxUrl = 'http://localhost:88/dash/';
+    var nginxVodFile = '/manifest.mpd';
+
+    var url = nginxUrl + document.getElementById(`file-name-${i}`).innerText + nginxVodFile;
+
+    navigator.clipboard.writeText(url).then(function() {
+        //console.log('Copying to clipboard was successful!');
+    }, function(err) {
+        //console.error('Could not copy text: ', err);
+    });
+}
+
+function popmsg(text) {
+
 }
 
 var showing = false
@@ -168,8 +205,6 @@ function showvidinfo(i) {
                         Resolution: ${d['VtRes']}
                         <br><br>
                         `;
-
-                        console.log("1");
                     });
                 } else if (!str['Stream'] && str['Video'][0]['FileName'] == name) {
                     info = `
@@ -181,7 +216,6 @@ function showvidinfo(i) {
                     Resolution: ${str['Video'][0]['VtRes']}
                     <br><br>
                     `;
-                    console.log("2");
                 }
             });
 
@@ -201,14 +235,12 @@ function transcode(i) {
     postvideoupdate(3, name, '', false);
 }
 
-function delet(i, stream) {
+async function delet(i, stream) {
     var name = document.getElementById(`file-name-${i}`).innerHTML;
-    var response = postvideoupdate(1, name, '', stream);
+    postvideoupdate(1, name, '', stream);
 
-    if (response != null) {
-        var listitem = document.getElementById(`list-item-${i}`);
-        listitem.parentNode.removeChild(listitem);
-    }
+    var listitem = document.getElementById(`list-item-${i}`);
+    listitem.parentNode.removeChild(listitem);
 }
 
 var updating = false;
@@ -237,24 +269,27 @@ function update(i, stream) {
     listItem.appendChild(updateForm);
 }
 
-function setvalue(i, stream) {
+async function setvalue(i, stream) {
     var value = document.getElementById(`update-input-${i}`).value;
     var ovalue = document.getElementById(`file-name-${i}`);
     var updateForm = document.getElementById(`item-update-${i}`);
     updateForm.parentNode.removeChild(updateForm);
 
-    var response = postvideoupdate(2, value, ovalue.innerHTML, stream);
-
-    if (response != null) {
-        ovalue.innerHTML = value;
-    }
+    postvideoupdate(2, value, ovalue.innerHTML, stream);
+    ovalue.innerHTML = value;
 }
 
 function postvideoupdate(i, value, ovalue, stream) {
+    var name;
+
+    if (ovalue == '') {
+        name = value;
+    } else {
+        name = value +"/"+ovalue
+    }
     var data = {
         "Utype": i,
-        "Data": value,
-        "Odata": ovalue,
+        "Data": name,
         "Stream": stream
     }
 
@@ -264,11 +299,7 @@ function postvideoupdate(i, value, ovalue, stream) {
         })
         .catch(function (error) {
             console.log(error)
-            return null;
-            // handle error
         });
-
-        return 'ok';
 }
 
 function watch(i) {
