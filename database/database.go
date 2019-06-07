@@ -209,6 +209,14 @@ func InsertVideo(vid vd.Vidinfo, name string, state string, sid int) error {
 		id        int
 	)
 
+	var ti = -1
+	for i, _ := range vid.Videotrack {
+		ti = i
+	}
+	if ti < 0 {
+		return errors.New("Error: no video tracks found")
+	}
+
 	// Insert video track
 	if sid < 0 {
 		query = getInsertQuery(videovalues, "Video")

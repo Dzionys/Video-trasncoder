@@ -46,7 +46,6 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(500)
 			log.Println(err)
 		}
-		w.WriteHeader(200)
 
 	case "POST":
 
@@ -72,12 +71,14 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if !allowed {
 			lp.WLog("Error: this file format is not allowed "+filepath.Ext(handler.Filename), r.RemoteAddr)
+			w.WriteHeader(403)
 			return
 		}
 
 		// Checks if uploaded file with the same name already exists
 		if _, err := os.Stat("./videos/" + handler.Filename); err == nil {
 			lp.WLog(fmt.Sprintf("Error: file \"%v\" already exists", handler.Filename), r.RemoteAddr)
+			w.WriteHeader(403)
 			return
 		}
 

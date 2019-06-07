@@ -104,17 +104,37 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 
 		// Audio part ---------------------------------------------
 
-		for i, at := range s.AudioT {
-			if !(vdata.Videotrack[0].FrameRate < 25) {
-				tempmp += fmt.Sprintf(" -map 0:%v", at.AtId)
+		if s.AudioT[0].AtId != -1 {
+			for i, at := range s.AudioT {
+				if !(vdata.Videotrack[0].FrameRate < 25) {
+					tempmp += fmt.Sprintf(" -map 0:%v", at.AtId)
+				}
+				tempac += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, audpr.Bitrate, at.Lang)
 			}
-			tempac += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, audpr.Bitrate, at.Lang)
+		} else {
+			for i, at := range vdata.Audiotrack {
+				if !(vdata.Videotrack[0].FrameRate < 25) {
+					tempmp += fmt.Sprintf(" -map 0:%v", at.Index)
+				}
+				tempac += fmt.Sprintf(" -c:a:%v libfdk_aac -ac 2 -b:a:%v %vk -metadata language=%v", i, i, audpr.Bitrate, at.Language)
+			}
 		}
 
 		// Subtitle part ------------------------------------------
 
-		for _, st := range s.SubtitleT {
-			tempsc += fmt.Sprintf(" -c:s:%[1]v copy -metadata:s:s:%[1]v language=%[2]v", st.StId, st.Lang)
+		for i, _ := range s.SubtitleT {
+			if i > 0 {
+				break
+			}
+			if s.SubtitleT[0].StId != -1 {
+				for _, st := range s.SubtitleT {
+					tempsc += fmt.Sprintf(" -c:s:%[1]v copy -metadata:s:s:%[1]v language=%[2]v", st.StId, st.Lang)
+				}
+			} else {
+				for _, st := range vdata.Subtitle {
+					tempsc += fmt.Sprintf(" -c:s:%[1]v copy -metadata:s:s:%[1]v language=%[2]v", st.Index, st.Language)
+				}
+			}
 		}
 
 		// Creates output file names
@@ -126,7 +146,7 @@ func generatePresetCmdLine(prdata vd.PData, vdata vd.Vidinfo, sf string, sfname 
 		scode = append(scode, tempsc)
 		mapping = append(mapping, tempmp)
 
-		if len(fcmaps) < 1 {
+		if len(fcmaps) < i+1 {
 			fcmaps = append(fcmaps, "")
 		}
 

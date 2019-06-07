@@ -10,7 +10,7 @@ DD = "videos/transcoded/"
 # If true debug transcoder by transcoding only interval between DebugStart-DebugEnd
 Debug = true
 DebugStart = "00:00:00"
-DebugEnd = "00:02:00"
+DebugEnd = "00:00:30"
 
 # Temporay json file path and name for generate_data.py
 TempJson = "transcode/temp.json"

@@ -155,5 +155,5 @@ inputFile.addEventListener('change', upload);
 transcodeForm.addEventListener('submit', transcode);
 buttonSave.addEventListener('click', function(event) {
   save = true;
-  transcode(event);
+  transcode(event, save);
 });

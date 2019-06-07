@@ -1,6 +1,7 @@
 package transcoder
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -58,6 +59,9 @@ func getRatio(res string, duration int, clid string) {
 func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup, clid string) error {
 	defer wg.Done()
 
+	if cmdl == "" {
+		return errors.New("Error: cmd line is empty")
+	}
 	// Splits cmd command
 	parts := strings.Fields(cmdl)
 	head := parts[0]

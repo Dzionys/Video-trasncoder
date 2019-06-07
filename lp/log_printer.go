@@ -3,12 +3,15 @@ package lp
 import (
 	"log"
 	"os"
+	"strings"
 )
 
 var LogFile *os.File
 
 func WLog(msg string, clid string) {
-	log.Println(msg)
+	if strings.HasPrefix(msg, "Error:") {
+		log.Println(msg)
+	}
 	UpdateLogMessage(msg, clid)
 }
 

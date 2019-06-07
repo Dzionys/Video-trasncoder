@@ -14,7 +14,7 @@ var framerate = document.getElementById('frame-rate');
 var audioTracks = document.getElementById('audio-tracks');
 var subtitleTracks = document.getElementById('subtitle-tracks');
 
-media.dash.enabled;
+//media.dash.enabled;
 
 function sse() {
   var source = new EventSource('/sse/dashboard');
@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
   var _selector = document.querySelector('input[name=checkbox]');
   _selector.addEventListener('change', function (event) {
     var data = {
-      "Tc": "true"
+      "Tc": 'true'
     }
     if (_selector.checked) {
       axios.post('/tctype', data)
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
           // handle error
         })
     } else {
-      data.Tc = "false";
+      data.Tc = 'false';
       axios.post('/tctype', data)
         .then(function (response) {
         })

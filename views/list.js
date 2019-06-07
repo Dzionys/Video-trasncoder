@@ -235,7 +235,7 @@ function transcode(i) {
     postvideoupdate(3, name, '', false);
 }
 
-async function delet(i, stream) {
+function delet(i, stream) {
     var name = document.getElementById(`file-name-${i}`).innerHTML;
     postvideoupdate(1, name, '', stream);
 
@@ -269,7 +269,7 @@ function update(i, stream) {
     listItem.appendChild(updateForm);
 }
 
-async function setvalue(i, stream) {
+function setvalue(i, stream) {
     var value = document.getElementById(`update-input-${i}`).value;
     var ovalue = document.getElementById(`file-name-${i}`);
     var updateForm = document.getElementById(`item-update-${i}`);

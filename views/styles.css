@@ -212,6 +212,21 @@ body,
   text-align: center;
 }
 
+.pbutton {
+  display: inline-block;
+  position: relative;
+  width: 7rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #172C64;
+  margin-top: 0.4rem;
+  background-color: #8eb8e5;
+  padding: 3px;
+  border: none;
+  border-radius: 2px;
+  text-align: center;
+}
+
 .button {
   display: inline-block;
   border-radius: 4px;

@@ -79,7 +79,7 @@ func (b *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// Remove this client from the map of attached clients when `EventHandler` exits
 		b.DefunctClients <- messageChan
-		log.Println("HTTP connection just closed.")
+		//log.Println("HTTP connection just closed.")
 	}()
 
 	// Set the headers related to event streaming
@@ -102,7 +102,7 @@ func (b *Broker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		f.Flush()
 	}
 
-	log.Println("Finished HTTP request at ", r.URL.Path)
+	//log.Println("Finished HTTP request at ", r.URL.Path)
 }
 
 func UpdateMessage(msg string) {

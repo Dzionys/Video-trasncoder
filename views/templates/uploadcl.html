@@ -4,7 +4,7 @@
     <input onclick="setTimeout(reload, 50)" type="checkbox" id="checkBox" name="checkbox" checked>
     <span class="slider round"></span>
   </label>
-  <h4>Turn off preset transcoding</h4>
+  <h4>Toggle for preset transcoding</h4>
   <a id="video-list" href = "/list">
     <button type="button" id="list-button">Video List</button>
   </a>
@@ -81,8 +81,8 @@
       </span>
     </div>
 
-    <input type="submit" value="Submit" id="transcode-submit">
-    <button type="button" id="button-save">Save</button>
+    <input class="pbutton" type="submit" value="Submit" id="transcode-submit">
+    <button class="pbutton" type="button" id="button-save">Save</button>
   </form>
 </div>
 {{end}}
