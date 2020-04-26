@@ -475,6 +475,8 @@ func resetData() {
 
 func main() {
 
+	_ = db.ConnectDB()
+
 	// Make a new Broker instance
 	lp.B = &lp.Broker{
 		Clients:        make(map[chan string]string),
