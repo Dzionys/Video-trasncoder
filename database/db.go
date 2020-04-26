@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 
+	"../models"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" //Gorm postgres dialect interface
 	"github.com/joho/godotenv"
@@ -35,6 +37,10 @@ func ConnectDB() *gorm.DB {
 		fmt.Println("error", err)
 		panic(err)
 	}
+
+	// Migrate the schema
+	db.AutoMigrate(
+		&models.User{})
 
 	return db
 }
