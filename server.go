@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -13,10 +12,14 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/joho/godotenv"
+
 	"github.com/gorilla/mux"
 
 	cf "./conf"
+	"./controllers"
 	db "./database"
+	"./database/auth"
 	"./lp"
 	tc "./transcode"
 	vd "./videodata"
@@ -27,8 +30,9 @@ var (
 	tcvidpath      = "/home/dzionys/Documents/Video-trasncoder/videos/transcoded/%v"
 	basetemplate   = "./views/templates/base.html"
 	wg             sync.WaitGroup
-	CONF           cf.Config
-	vfnprd         = make(chan vd.VfNPrd)
+	// CONF contains configuration info
+	CONF   cf.Config
+	vfnprd = make(chan vd.VfNPrd)
 )
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +108,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		lp.WLog("Upload successful", r.RemoteAddr)
 
-		data, err := writeJsonResponse(w, handler.Filename, r.RemoteAddr)
+		data, err := writeJSONResponse(w, handler.Filename, r.RemoteAddr)
 		if err != nil {
 			w.WriteHeader(500)
 			log.Println(err)
@@ -144,7 +148,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // Send json response after file upload
-func writeJsonResponse(w http.ResponseWriter, filename string, clid string) (vd.Vidinfo, error) {
+func writeJSONResponse(w http.ResponseWriter, filename string, clid string) (vd.Vidinfo, error) {
 	var (
 		data    vd.Data
 		vidinfo vd.Vidinfo
@@ -214,7 +218,7 @@ func tctypeHandler(w http.ResponseWriter, r *http.Request) {
 		CONF.Presets = true
 		uploadtemplate = "./views/templates/upload.html"
 	} else {
-		log.Println(errors.New(fmt.Sprintf("uknown change type: '%v', expected 'true' or 'false'", rsp.Typechange)))
+		log.Println(fmt.Errorf("uknown change type: '%v', expected 'true' or 'false'", rsp.Typechange))
 		w.WriteHeader(415)
 
 	}
@@ -420,6 +424,7 @@ func vidUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// FileExist checks if file exist in database
 func FileExist(name string) bool {
 	notstream := false
 	for _, ave := range CONF.FileTypes {
@@ -473,9 +478,17 @@ func removeFile(path string, filename string, clid string) {
 func resetData() {
 }
 
-func main() {
+func commonMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, Access-Control-Request-Headers, Access-Control-Request-Method, Connection, Host, Origin, User-Agent, Referer, Cache-Control, X-header")
+		next.ServeHTTP(w, r)
+	})
+}
 
-	_ = db.ConnectDB()
+func main() {
 
 	// Make a new Broker instance
 	lp.B = &lp.Broker{
@@ -496,6 +509,14 @@ func main() {
 		log.Println(err)
 		return
 	}
+
+	err = godotenv.Load()
+	if err != nil {
+		log.Println("Error: failed to load .env file")
+		log.Println(err)
+		return
+	}
+	port := os.Getenv("PORT")
 
 	//Use client choices html if CONF.Presets false
 	if CONF.Advanced && !CONF.Presets {
@@ -529,7 +550,11 @@ func main() {
 		return
 	}
 
-	r := mux.NewRouter()
+	// Handle routes
+	//http.Handle("/", routes.Handlers())
+
+	r := mux.NewRouter().StrictSlash(true)
+	//r.Use(commonMiddleware)
 
 	r.Handle("/ngx/mapping/{name}", http.HandlerFunc(ngxMappingHandler))
 	r.Handle("/transcode", http.HandlerFunc(transcodeHandler))
@@ -540,7 +565,22 @@ func main() {
 	r.Handle("/watch", http.HandlerFunc(playerHandler))
 	r.Handle("/sse/dashboard", lp.B)
 	r.Handle("/upload", http.HandlerFunc(uploadHandler))
+
+	//r.HandleFunc("/", controllers.TestAPI).Methods("GET")
+	r.HandleFunc("/api", controllers.TestAPI).Methods("GET")
+	r.HandleFunc("/register", controllers.CreateUser).Methods("POST")
+	r.HandleFunc("/login", controllers.Login).Methods("POST")
+
+	// Auth route
+	s := r.PathPrefix("/auth").Subrouter()
+	s.Use(auth.JwtVerify)
+	s.HandleFunc("/user", controllers.FetchUsers).Methods("GET")
+	s.HandleFunc("/user/{id}", controllers.GetUser).Methods("GET")
+	s.HandleFunc("/user/{id}", controllers.UpdateUser).Methods("PUT")
+	s.HandleFunc("/user/{id}", controllers.DeleteUser).Methods("DELETE")
+
 	r.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("views"))))
-	fmt.Println("Listening on port: 8080...")
-	log.Fatalf("Exited: %s", http.ListenAndServe(":8080", r))
+
+	fmt.Printf("Listening on port: %v...\n", port)
+	log.Fatalf("Exited: %s", http.ListenAndServe(":"+port, r))
 }
