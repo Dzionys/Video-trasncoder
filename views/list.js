@@ -295,7 +295,7 @@ function postvideoupdate(i, value, ovalue, stream) {
 
     axios.post('/videoupdate', data)
         .then(function (response) {
-
+            console.log(response)
         })
         .catch(function (error) {
             console.log(error)

@@ -565,12 +565,8 @@ func main() {
 	r.Handle("/watch", http.HandlerFunc(playerHandler))
 	r.Handle("/sse/dashboard", lp.B)
 	r.Handle("/upload", http.HandlerFunc(uploadHandler))
-
-	//r.HandleFunc("/", controllers.TestAPI).Methods("GET")
-	r.HandleFunc("/api", controllers.TestAPI).Methods("GET")
-	r.HandleFunc("/register", controllers.CreateUser).Methods("POST")
-	r.HandleFunc("/login", controllers.Login).Methods("POST")
-
+	r.HandleFunc("/register", controllers.CreateUser)
+	r.HandleFunc("/login", controllers.Login)
 	// Auth route
 	s := r.PathPrefix("/auth").Subrouter()
 	s.Use(auth.JwtVerify)

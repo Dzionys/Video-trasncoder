@@ -3,7 +3,9 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"text/template"
 	"time"
 
 	dtbs "../database"
@@ -29,15 +31,40 @@ func TestAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	user := &models.User{}
-	err := json.NewDecoder(r.Body).Decode(user)
-	if err != nil {
-		var resp = map[string]interface{}{"status": false, "message": "Invalid request"}
+
+	var (
+		basetemplate  = "./views/templates/baseAuth.html"
+		logintemplate = "./views/templates/login.html"
+	)
+
+	switch r.Method {
+	case "GET":
+		t, err := template.ParseFiles(basetemplate, logintemplate)
+		if err != nil {
+			w.WriteHeader(500)
+			log.Println(err)
+			return
+		}
+		err = t.Execute(w, nil)
+		if err != nil {
+			w.WriteHeader(500)
+			log.Println(err)
+			return
+		}
+	case "POST":
+		user := &models.User{}
+		err := json.NewDecoder(r.Body).Decode(user)
+		if err != nil {
+			var resp = map[string]interface{}{"status": false, "message": "Invalid request"}
+			json.NewEncoder(w).Encode(resp)
+			return
+		}
+		resp := FindOne(user.Email, user.Password)
 		json.NewEncoder(w).Encode(resp)
-		return
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-	resp := FindOne(user.Email, user.Password)
-	json.NewEncoder(w).Encode(resp)
 }
 
 func FindOne(email, password string) map[string]interface{} {
@@ -80,27 +107,51 @@ func FindOne(email, password string) map[string]interface{} {
 //CreateUser function -- create a new user
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 
-	user := &models.User{}
-	json.NewDecoder(r.Body).Decode(user)
+	var (
+		basetemplate   = "./views/templates/baseAuth.html"
+		signuptemplate = "./views/templates/register.html"
+	)
 
-	pass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if err != nil {
-		fmt.Println(err)
-		err := ErrorResponse{
-			Err: "Password Encryption  failed",
+	switch r.Method {
+	case "GET":
+		t, err := template.ParseFiles(basetemplate, signuptemplate)
+		if err != nil {
+			w.WriteHeader(500)
+			log.Println(err)
+			return
 		}
-		json.NewEncoder(w).Encode(err)
+		err = t.Execute(w, nil)
+		if err != nil {
+			w.WriteHeader(500)
+			log.Println(err)
+			return
+		}
+	case "POST":
+
+		user := &models.User{}
+		json.NewDecoder(r.Body).Decode(user)
+
+		pass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+		if err != nil {
+			fmt.Println(err)
+			err := ErrorResponse{
+				Err: "Password Encryption  failed",
+			}
+			json.NewEncoder(w).Encode(err)
+		}
+
+		user.Password = string(pass)
+
+		createdUser := db.Create(user)
+		var errMessage = createdUser.Error
+
+		if createdUser.Error != nil {
+			fmt.Println(errMessage)
+		}
+		json.NewEncoder(w).Encode(createdUser)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-
-	user.Password = string(pass)
-
-	createdUser := db.Create(user)
-	var errMessage = createdUser.Error
-
-	if createdUser.Error != nil {
-		fmt.Println(errMessage)
-	}
-	json.NewEncoder(w).Encode(createdUser)
 }
 
 //FetchUser function

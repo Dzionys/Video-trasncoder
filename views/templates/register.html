@@ -1,0 +1,16 @@
+{{define "auth"}}
+<div class="container">
+    <div id="register-window">
+        <form>
+            <input type="text" id="name" placeholder="Name">
+            <input type="email" id="email" placeholder="example@hotmail.com">
+            <input type="password" id="password" placeholder="Password">
+            <input type="submit" id="signup-button" value="Sign Un">
+        </form>
+    </div>
+</div>
+
+<noscript>JavaScript is necessary!</noscript>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="signup.js"></script>
+{{end}}
