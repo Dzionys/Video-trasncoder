@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	vd "../videodata"
 	_ "github.com/mattn/go-sqlite3"
@@ -727,6 +728,7 @@ func PutVideosToJson() (vd.Dt, error) {
 		tempvideo.StreamName = n
 		tempvideo.State = state
 		tempvideo.Stream = true
+		tempvideo.Thumbnail = n + ".jpg"
 		videos.VideoStream = append(videos.VideoStream, tempvideo)
 	}
 
@@ -753,6 +755,7 @@ func PutVideosToJson() (vd.Dt, error) {
 		var tempvideo vd.VideoStream
 		tempvideo.Stream = false
 		tempvideo.State = state
+		tempvideo.Thumbnail = strings.Split(n, filepath.Ext(n))[0] + ".jpg"
 		tempvideo.Video = append(tempvideo.Video, vid)
 		videos.VideoStream = append(videos.VideoStream, tempvideo)
 	}

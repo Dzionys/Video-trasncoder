@@ -10,6 +10,7 @@ type Config struct {
 	SD         string
 	TD         string
 	DD         string
+	TND        string
 	Debug      bool
 	DebugStart string
 	DebugEnd   string
@@ -19,6 +20,8 @@ type Config struct {
 	ABW        int
 	DataGen    string
 	LogP       string
+	TNTS       string
+	TNNum      int
 	Advanced   bool
 	Presets    bool
 	FileTypes  []string

@@ -33,6 +33,12 @@ function list() {
                 vinfo.id = `vd-info-${i}`;
                 vinfo.className = 'vd-info';
 
+                var thumbn = document.createElement('img');
+                thumbn.src = 'thumbnails/'+d['Thumbnail'];
+                thumbn.id = `file-tn-${i}`;
+                thumbn.className = 'list-item-tn';
+                thumbn.setAttribute('onclick', `watch(${i})`);
+
                 var tempspan = document.createElement('span');
                 tempspan.id = `file-status-${i}`;
                 tempspan.className = 'list-item-status';
@@ -77,6 +83,7 @@ function list() {
                 tempa.appendChild(tempdbt);
                 tempa.appendChild(tempib);
                 newListItem.appendChild(tempspan);
+                newListItem.appendChild(thumbn);
                 newListItem.appendChild(temph4);
                 newListItem.appendChild(tempa);
 
@@ -90,6 +97,12 @@ function list() {
                 vinfo.style.display = 'none';
                 vinfo.id = `vd-info-${i}`;
                 vinfo.className = 'vd-info';
+
+                var thumbn = document.createElement('img');
+                thumbn.id = `file-tn-${i}`;
+                thumbn.className = 'list-item-tn';
+                thumbn.src = 'thumbnails/'+d['Thumbnail'];
+                thumbn.setAttribute('onclick', `watch(${i})`);
 
                 var tempspan = document.createElement('span');
                 tempspan.id = `file-status-${i}`;
@@ -114,6 +127,7 @@ function list() {
                 var tempbt = document.createElement('button');
                 tempbt.type = 'button';
                 tempbt.className = 'list-item-button';
+
                 if (d['State'] != 'Transcoded') {
                     if (d['State'] != 'Transcoding') {
                         tempbt.innerHTML = "Transcode";
@@ -142,6 +156,7 @@ function list() {
                 tempa.appendChild(tempdbt);
                 tempa.appendChild(tempib);
                 newListItem.appendChild(tempspan);
+                newListItem.appendChild(thumbn);
                 newListItem.appendChild(temph4);
                 newListItem.appendChild(tempa);
 

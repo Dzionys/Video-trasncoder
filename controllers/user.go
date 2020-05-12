@@ -26,10 +26,6 @@ type error interface {
 
 var db = dtbs.ConnectDB()
 
-func TestAPI(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("API working"))
-}
-
 func Login(w http.ResponseWriter, r *http.Request) {
 
 	var (

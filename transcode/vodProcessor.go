@@ -102,6 +102,27 @@ func runCmdCommand(cmdl string, dur string, wg *sync.WaitGroup, clid string) err
 	return nil
 }
 
+func generateThumbnail(wg *sync.WaitGroup, source string, sourcewe string, data vd.Vidinfo) error {
+	defer wg.Done()
+
+	//var timeStamp = (durToSec(data.Videotrack[0].Duration)) / CONF.TNNum
+	//var timeStamp = int((float64(durToSec(data.Videotrack[0].Duration)) * data.Videotrack[0].FrameRate) / 10)
+
+	//var baseCmd = "ffmpeg -i %v -vf fps=1/%v %v%v%%03d.jpg"
+	//var baseCmd = "ffmpeg -i %v -vf thumbnail=%v,setpts=N/TB -r 1 -vframes %v %v%v%%03d.jpg"
+	var baseCmd = "ffmpeg -i %v -ss %v -vframes 1 %v%v.jpg"
+	cmdl := fmt.Sprintf(baseCmd, source, CONF.TNTS, CONF.TND, sourcewe)
+
+	parts := strings.Fields(cmdl)
+	head := parts[0]
+	parts = parts[1:]
+
+	cmd := exec.Command(head, parts...)
+	err := cmd.Run()
+
+	return err
+}
+
 func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.PData, conf cf.Config, clid string) {
 	lp.WLog("Starting VOD Processor..", clid)
 	var (
@@ -177,6 +198,15 @@ func ProcessVodFile(source string, data vd.Vidinfo, cldata vd.Video, prdata vd.P
 			return
 		}
 	}
+
+	// Generate thumbnails
+	lp.WLog("Generating thumbnails...", clid)
+	wg.Add(1)
+	err = generateThumbnail(&wg, fullsfname, sfnamewe, data)
+	if err != nil {
+		log.Printf("Generate thumbnail exited with error: %v", err)
+	}
+	wg.Wait()
 
 	msg := "%v video track(s), %v audio track(s) and %v subtitle(s) found"
 	frmt := fmt.Sprintf(msg, data.Videotracks, data.Audiotracks, data.Subtitles)

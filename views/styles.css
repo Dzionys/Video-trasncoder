@@ -375,6 +375,15 @@ input:checked + .slider:before {
   font-weight: bold;
 }
 
+.list-item-tn {
+  height: 80px;
+  align-content: flex-start;
+}
+
+.list-item-tn:hover {
+  opacity: 0.5;
+}
+
 .list-item-button, .list-item-watch, .button {
   padding: 0.65rem;
   color: #172C64;

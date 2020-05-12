@@ -13,10 +13,10 @@ function login() {
         .then(function(response) {
             var message = document.createElement('h3')
             message.innerText = response.data.message
-
             document.getElementById('login-window').appendChild(message)
 
-            console.log(response)
+            localStorage.setItem('token', response.data.token)
+            window.location.href = 'auth/vd'
         })
         .catch(function (error) {
             console.log(error)

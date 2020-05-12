@@ -6,6 +6,8 @@ SD = "videos/"
 TD = "videos/transcoding/"
 # Destination file directory
 DD = "videos/transcoded/"
+# Thumbnail directory
+TND = "views/thumbnails/"
 
 # If true debug transcoder by transcoding only interval between DebugStart-DebugEnd
 Debug = true
@@ -28,10 +30,14 @@ DataGen = "transcode/generate_data.py"
 # Log file path and name
 LogP = "info.log"
 
+# Thumbnail timestamp
+TNTS = "00:00:15"
+TNNum = 5
+
 # If Advanced true but Presets false then using advanced transcoder based on client choices
 Advanced = true
 # If Advanced and Presets set to true use Presets as default
-Presets = true
+Presets = false
 
 # Available file formats to be uploaded
 FileTypes = [".mkv", ".mp4", ".avi", ".mov", ".mpg", ".wmv"]
